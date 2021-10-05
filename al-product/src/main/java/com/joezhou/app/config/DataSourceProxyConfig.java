@@ -35,8 +35,4 @@ public class DataSourceProxyConfig {
     public DataSourceProxy dataSourceProxy(DruidDataSource druidDataSource) {
         return new DataSourceProxy(druidDataSource);
     }
-
-
-
-
 }

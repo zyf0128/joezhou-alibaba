@@ -26,3 +26,4 @@ mybatis-plus:
   type-aliases-package: com.joezhou.app.entity
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+

@@ -889,6 +889,7 @@
     - `spring.cloud.nacos.config.namespace=public`，命名空间，默认public。
     - `spring.cloud.alibaba.seata.tx-service-group=my_test_tx_group`，配置事务服务名：
         - 必须和 `%SEATA_HOME%\conf\file.conf`：中service模块中的值保持一致。
+    - `logging.level.com.alibaba.nacos.client.naming: warn`：阻止nacos无限地心跳检测日志，可选。
 - 分别在商品微服务和订单微服务添加数据源代理配置类 `config.DataSourceProxyConfig`：
     - 标记 `@Configuration` 以声明为配置类。
 - 在配置类中管理 `c.a.d.p.DruidDataSource` 数据源类：

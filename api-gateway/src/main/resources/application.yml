@@ -1,0 +1,52 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true # 让网关可以发现其他微服务
+      routes:
+        - id: user-route # 用户微服务路由ID
+          uri: lb://al-user # 路由真实地址，`lb://` 表示负载均衡
+          order: 1 # 路由优先级，数值越小优先级越高
+          predicates:
+            - Path=/user-service/** # 请求满足此格式时，断言配置才能生效
+            - Before=2023-05-05T00:00:00.000+08:00 # 请求必须在该日期之前发起
+            - After=2020-05-05T00:00:00.000+08:00 # 请求必须在该日期之后发起
+            - Method=GET # 请求必须是GET类型
+            - Age=16,60
+          filters:
+            - StripPrefix=1 # 删除端口号之后的一层路径，一般用于删除服务名
+            - AddRequestHeader=a,1 # 为原请求添加Header键值对a=1。
+            - AddRequestParameter=b,2 # 为原请求添加请求参数键值对b=2。
+            - AddResponseHeader=c,3 # 为原响应添加Header键值对c=3。
+            - SetResponseHeader=g,4 # 修改原响应Header中g的值为4。
+            - SetStatus=2000 # 修改原始响应的状态码。
+            - Req=true,true
+        - id: product-route # 商品微服务路由ID
+          uri: lb://al-product
+          order: 1
+          predicates:
+            - Path=/product-service/**
+          filters:
+            - StripPrefix=1
+        - id: order-route # 订单微服务路由ID
+          uri: lb://al-order
+          order: 1
+          predicates:
+            - Path=/order-service/**
+          filters:
+            - StripPrefix=1
+  zipkin:
+    base-url: http://localhost:9411
+    discovery-client-enabled: false # 不向nacos注册zipkin服务
+  sleuth:
+    sampler:
+      probability: 1.0 # 采样百分比为100%

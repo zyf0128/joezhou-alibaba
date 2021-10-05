@@ -1,0 +1,28 @@
+# 基本配置
+server:
+  port: 8020
+spring:
+  application:
+    name: al-product
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/alibaba?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8
+    username: alibaba
+    password: alibaba
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # Nacos服务端
+  zipkin:
+    base-url: http://localhost:9411
+    discovery-client-enabled: false # 不向nacos注册zipkin服务
+  sleuth:
+    sampler:
+      probability: 1.0 # 采样百分比为100%
+
+# 整合mybatis-plus
+mybatis-plus:
+  mapper-locations: classpath:mapper/*Mapper.xml
+  type-aliases-package: com.joezhou.app.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

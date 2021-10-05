@@ -884,7 +884,7 @@
 - 分别在商品微服务和订单微服务中添加 `bootstrap.yml` 主配：
     - `spring.application.name: al-order/al-product`：配置微服务名。
     - `spring.profiles.active=test`：配置环境标识，本案例中，该项可选。
-    - `spring.cloud.nacos.config.server-addr: 127.0.0.1:8848`：nacos配置中心地址。
+    - `spring.cloud.nacos.config.server-addr=127.0.0.1:8848`：nacos配置中心地址。
     - `spring.cloud.nacos.config.group=SEATA_GROUP`：seata在nacos中生成的配置文件的GROUP名。
     - `spring.cloud.nacos.config.namespace=public`，命名空间，默认public。
     - `spring.cloud.alibaba.seata.tx-service-group=my_test_tx_group`，配置事务服务名：

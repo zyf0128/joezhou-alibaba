@@ -23,7 +23,8 @@
 **武技：** 开发maven-jar父项目 `joezhou-alibaba`：
 - 检查maven配置是否正确。
 - 父项目不用于开发，可以直接删除掉src目录。
-- 根据 `alibaba.sql` 生成数据库实例，用户，表和测试数据。
+- 生成数据库实例，用户，表和测试数据：
+    - `资源/SQL/alibaba.sql`
 - 在POM中使用 `<parent>` 配置父依赖：
     - `org.springframework.boot.spring-boot-starter-parent(2.1.3.RELEASE)`
 - 在POM中使用 `<properties>` 配置jdk和编码：
@@ -635,7 +636,7 @@
 
 **武技：** 将zipkin链路追踪信息持久化到mysql数据库：
 - 添加zipkin持久化相关的三张表（官方提供）：
-    - `z-sql/zipkin.sql`
+    - `资源/SQL/zipkin.sql`
 - 启动zipkin服务，额外指定mysql相关配置：
     - `java -jar zipkin-server-2.12.9-exec.jar` 
     - `--STORAGE_TYPE=mysql`：指定将链路追踪的数据持久化到mysql数据库。
@@ -877,7 +878,7 @@
 
 **武技：** 将订单微服务下单和商品微服扣减库存加入到一个分布式事务中：
 - 创建seata备份表 `undo_log`：
-    - `z-sql/seata.sql`
+    - `资源/SQL/seata.sql`
 - 分别在商品微服务和订单微服务中添加依赖：
     - `com.alibaba.cloud.spring-cloud-starter-alibaba-seata`
     - `com.alibaba.cloud.spring-cloud-starter-alibaba-nacos-config`

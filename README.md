@@ -400,6 +400,38 @@
 - cli: `localhost:8010/api/sentinel/open-feign?product-id=1`：调用成功：
     - 关闭商品微服务，再次发送请求，远程调用失败，执行兜底数据，表示sentinel成功对远程调用熔断降级。
 
+# RMQ消息队列
+
+**武技：** 订单微服务下单成功后，向broker中的order:sms投递消息：
+- 添加依赖：
+    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
+- 添加主配：
+    - `rocketmq.name-server=localhost:9876`：RMQ的NameServer的地址。
+    - `rocketmq.producer.group=order-producer-group`：配置生产者组名。
+- 开发业务类 `service.impl.OrderServiceImpl`：
+    - 使用 `@Autowired` 直接在订单业务类中注入 `o.a.r.s.c.RocketMQTemplate` 类。
+- 开发业务方法 `insert()`：
+    - `rmqTemplate.convertAndSend("order:sms", order)`：下单成功后，同步向broker指定主题标签投递order实体。
+- cli: `localhost:8000/order-service/api/order/insert?product-id=1`：
+    - 观察rmq管控台，查看是否存在订单微服务投递的消息。
+
+**武技：** 用户微服务消费broker中的order:sms消息：
+- 添加依赖：
+    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
+- 添加主配：
+    - `rocketmq.name-server=localhost:9876`：RMQ的NameServer的地址。
+- 开发消息监听类 `listener.OrderSmsListener`：用于接收RMQ的Broker投递的消息：
+    - 标记 `@Component` 以加入spring管理。
+    - 实现 `o.a.r.s.c.RocketMQListener<Order>`，类泛型为具体消息的类型。
+    - 重写 `onMessage()`：该方法在Broker投递消息时触发并执行。
+- 为消息监听类标记 `@RocketMQMessageListener()` 以声明为一个RMQ消费监听类：
+    - `consumerGroup = "user-consumer-group"`：消费者组名。
+    - `topic = "order"`：只消费order主题的消息。
+    - `selectorExpression = "sms"`：只消费sms标签的消息，默认为 `*`。
+    - `consumeMode = ConsumeMode.CONCURRENTLY`：默认CONCURRENTLY同步发送消息，可设置为ORDERLY顺序发送消息。
+    - `messageModel = MessageModel.CLUSTERING`：默认CLUSTERING集群发送消息，可设置为BROADCASTING广播消息。
+- 启动用户微服务，查看日志是否消费了order:sms中的消息。
+
 # API网关Gateway
 
 **心法：** API网关是所有请求的公共入口，为客户端提供统一服务，可实现一些与业务本身无关的公共逻辑，如认证，鉴权，监控，路由转发等：

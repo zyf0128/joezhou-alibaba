@@ -3,10 +3,8 @@ package com.joezhou.app.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -16,13 +14,11 @@ import java.io.Serializable;
  * </p>
  *
  * @author ${author}
- * @since 2021-09-15
+ * @since 2022-05-01
  */
+@TableName("`order`")
 @Data
 @EqualsAndHashCode(callSuper = false)
-@AllArgsConstructor
-@NoArgsConstructor
-@TableName("`order`")
 public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;

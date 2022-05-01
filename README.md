@@ -32,14 +32,14 @@
     - `<java.version>1.8</java.version>`
     - `<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>`
     - `<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>`
-- 在POM中使用 `<dependencyManagement>` 配置除 `<parent>` 之外的父依赖，解决maven的单继承问题： 
+- 在POM中使用 `<dependencyManagement>` 配置额外父依赖，解决maven的单继承问题： 
     - `org.springframework.cloud.spring-cloud-dependencies(Greenwich.RELEASE)`
     - `com.alibaba.cloud.spring-cloud-alibaba-dependencies(2.1.0.RELEASE)`
     - `<type>pom</type><scope>import</scope>`：每个额外父依赖都必须配置此二项。
 
 ## 开发通用微服务
 
-**武技：** 开发maven-jar通用服务 `al-common`：
+**武技：** 在父项目中开发maven-jar通用服务 `al-common`：
 - 查看父项目中的 `<modules>` 中是否添加了 `al-common` 子模块。
 - 添加依赖：
     - `org.projectlombok.lombok`
@@ -58,7 +58,7 @@
 
 ## 开发用户微服务
 
-**武技：** 开发maven-jar用户服务 `al-user`：
+**武技：** 在父项目中开发maven-jar用户服务 `al-user`：
 - 查看父项目中的 `<modules>` 中是否添加了 `al-user` 子模块。
 - 添加依赖：
     - `com.joezhou.al-common(1.0-SNAPSHOT)`
@@ -79,7 +79,7 @@
 
 ## 开发商品微服务
 
-**武技：** 开发maven-jar商品服务 `al-product`：
+**武技：** 在父项目中开发maven-jar商品服务 `al-product`：
 - 查看父项目中的 `<modules>` 中是否添加了 `al-product` 子模块。
 - 添加依赖：
     - `com.joezhou.al-common(1.0-SNAPSHOT)`
@@ -100,7 +100,7 @@
 
 ## 开发订单微服务
 
-**武技：** 开发maven-jar订单服务 `al-order`：
+**武技：** 在父项目中开发maven-jar订单服务 `al-order`：
 - 查看父项目中的 `<modules>` 中是否添加了 `al-order` 子模块。
 - 添加依赖：
     - `com.joezhou.al-common(1.0-SNAPSHOT)`

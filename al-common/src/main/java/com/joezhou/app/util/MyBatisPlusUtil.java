@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.generator.config.PackageConfig;
 import com.baomidou.mybatisplus.generator.config.StrategyConfig;
 import com.baomidou.mybatisplus.generator.config.rules.DateType;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
-import org.junit.Test;
 
 /**
  * @author JoeZhou
@@ -22,7 +21,7 @@ public class MyBatisPlusUtil {
         // 全局配置
         GlobalConfig gc = new GlobalConfig();
         // 拼接出代码最终输出的目录
-        gc.setOutputDir("D:\\coder\\idea-workspace\\joezhou-alibaba\\al-common\\src\\main\\java");
+        gc.setOutputDir("D:\\idea\\workspace\\joezhou-alibaba\\al-common\\src\\main\\java");
         // 设置生成目录后不打开目录
         gc.setOpen(false);
         // 重新生成文件时覆盖原文件

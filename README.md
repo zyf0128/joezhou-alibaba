@@ -65,14 +65,14 @@
     - `com.joezhou.al-common(1.0-SNAPSHOT)`
     - `org.springframework.boot.spring-boot-starter-web`
 - 将MBP生成的和用户相关的三层代码拷贝到src中，xml拷贝到classpath:mapper目录下。
-- 开发主配 `application.yml`：
+- 开发主配 `application.yml`：yaml文件中的冒号后面需要有一个空格，并以缩进来表示层级关系：
     - `server.port=8010`：端口。
     - `spring.application.name=al-user`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
     - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
-- 开发启动类 `com.joezhou.app.UserApp`：标记 `@SpringBootApplication`：
+- 开发启动类 `app.UserApp`：标记 `@SpringBootApplication`：
     - `SpringApplication.run(UserApp.class, args)`
-- 启动类使用 `@MapperScan()` 扫描Mapper接口所在的包。
+- 启动类使用 `@MapperScan("com.joezhou.app.mapper")` 扫描Mapper接口所在的包。
 - 控制器中开发控制方法：
     - 使用 `@Autowired` 注入业务层接口。
     - 开发按主键查询一条数据的控制方法，响应JSON字符串。

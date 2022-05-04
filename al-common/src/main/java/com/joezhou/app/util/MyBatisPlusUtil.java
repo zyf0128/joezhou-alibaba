@@ -21,7 +21,7 @@ public class MyBatisPlusUtil {
         // 全局配置
         GlobalConfig gc = new GlobalConfig();
         // 拼接出代码最终输出的目录
-        gc.setOutputDir("D:\\idea\\workspace\\joezhou-alibaba\\al-common\\src\\main\\java");
+        gc.setOutputDir("D:\\mbp");
         // 设置生成目录后不打开目录
         gc.setOpen(false);
         // 重新生成文件时覆盖原文件
@@ -44,7 +44,7 @@ public class MyBatisPlusUtil {
 
         // 包配置
         PackageConfig pc = new PackageConfig();
-        pc.setParent("com.joezhou.app");
+        pc.setParent("");
         mpg.setPackageInfo(pc);
 
         // ORM映射策略

@@ -53,7 +53,8 @@
     - `com.fasterxml.jackson.core.jackson-databind(2.9.7)`
 - 开发工具类 `util.JacksonUtil` 用于创建JSON格式的字符串数据。
 - 开发工具类 `util.MyBatisPlusUtil`：用于生成MBP代码：
-    - 根据数据库表生成三张表的entity层/Mapper层/Service层/Controller层代码和xml配置文件。
+    - 根据数据库表生成三张表的entity层/Mapper层/Service层/Controller层代码和xml配置文件，建议放在D盘。
+    - 将生成的 `entity` 目录整包拷贝到 `al-common` 微服务中以共享到整个微服务架构中。
     - 表 `order` 踩了SQL关键字，手动在Order实体类上添加 @TableName("`order`") 设置别名。
 
 ## 开发用户微服务

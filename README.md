@@ -91,7 +91,7 @@
     - `spring.application.name=al-product`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
     - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
-- 开发启动类：`com.joezhou.app.ProductApp` 并标记 `@SpringBootApplication`：
+- 开发启动类：`app.ProductApp` 并标记 `@SpringBootApplication`：
     - `SpringApplication.run(ProductApp.class, args)`
 - 启动类使用 `@MapperScan()` 扫描Mapper接口。
 - 控制器中开发控制方法：
@@ -112,7 +112,7 @@
     - `spring.application.name=al-order`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
     - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
-- 开发启动类：`com.joezhou.app.OrderApp` 并标记 `@SpringBootApplication`：
+- 开发启动类：`app.OrderApp` 并标记 `@SpringBootApplication`：
     - `SpringApplication.run(OrderApp.class, args)`
 - 启动类使用 `@MapperScan()` 扫描Mapper接口。
 - 控制器中开发控制方法：

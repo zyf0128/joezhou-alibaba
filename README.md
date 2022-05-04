@@ -88,7 +88,7 @@
 - 将MBP生成的和商品相关的三层代码拷贝到src中，xml拷贝到classpath:mapper目录下。
 - 开发主配 `application.yml`：
     - `server.port=8020`：端口。
-    - `spring.application.name=al-user`：微服务名。
+    - `spring.application.name=al-product`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
     - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
 - 开发启动类：`com.joezhou.app.ProductApp` 并标记 `@SpringBootApplication`：
@@ -109,7 +109,7 @@
 - 将MBP生成的和订单相关的三层代码拷贝到src中，xml拷贝到classpath:mapper目录下。
 - 开发主配 `application.yml`：
     - `server.port=8030`：端口。
-    - `spring.application.name=al-user`：微服务名。
+    - `spring.application.name=al-order`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
     - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
 - 开发启动类：`com.joezhou.app.OrderApp` 并标记 `@SpringBootApplication`：

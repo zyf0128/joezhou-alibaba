@@ -220,7 +220,9 @@
 
 ## 安装Jmeter
 
-**武技：**
+**心法：** `Apache JMeter` 是Apache组织基于Java开发的压力测试工具，用于对软件做压力测试，最初被设计用于Web应用测试，但后来扩展到了其他测试领域，可用于测试静态和动态资源，如静态文件，Java小服务程序，CGI脚本，Java对象，数据库和FTP服务器等。
+
+**武技：** 安装Jmeter压测工具，需要确认 `JAVA_HOME` 配置：
 - 安装Jmeter压测工具：
     - res：`apache-jmeter-5.2.1.zip`：解压缩即可。
 - 启动Jmeter压测工具：
@@ -230,16 +232,31 @@
     - `Options -> Choose Language -> Chinese(Simplified)`
 - 添加线程组：用于设置线程信息：
     - 右键 `Test Plan`：依次选择 `添加 -> 线程(用户) -> 线程组` 进入线程组配置界面。
-    - `线程数`：表示当前要开启多少个线程。
-    - `Ramp-Up时间`：表示全部线程在多少秒内启动完成。
-    - `循环次数`：表示全部线程分别发送多少次请求，勾选 `永远` 表示一直发送。
+    - 填写 `线程数`：表示当前要开启多少个线程。
+    - 填写 `Ramp-Up时间`：表示全部线程在多少秒内启动完成。
+    - 填写 `循环次数`：表示全部线程分别发送多少次请求，勾选 `永远` 表示一直发送。
 - 添加HTTP请求：用于设置请求路径：
     - 右键 `线程组`：依次选择 `添加 -> 取样器 -> HTTP请求` 进入HTTP请求配置界面。
-    - 填写协议如 `http`，服务器IP如 `localhost`，端口号如 `8010`，请求接口地址如 `/api/user/test`。
+    - 填写协议如 `http`，服务器IP如 `localhost`，端口号如 `8010`，请求接口地址如 `/api/user/test` 等。
 - 添加结果树：用户观察请求结果：
     - 右键 `线程组`：依次选择 `添加 -> 监听器 -> 观察结果树` 添加一个结果树。
-- 启动Jmeter压力测试：
-    - 右键 `线程组`，选择启动，可以单独启动指定的线程组。
+- 启动Jmeter压力测试：点击工具栏的启动按钮会启动全部线程组的压力测试：
+    - 右键 `线程组`，选择启动，可以单独启动指定的线程组的压力测试。
+
+## 开发降级方法
+
+**心法：** 当sentinel资源发生流控，熔断，授权等异常时，会执行资源指定的降级类的fallback降级方法中进行异常处理并返回兜底数据。
+
+**武技：** 开发无参的通用fallback降级方法：
+- 开发降级类 `fallback.SentinelFallback`：名称和未知随意。
+- 开发降级方法 `commNoArgFallBack(Throwable e)`：
+    - fallback降级方法必须被public和static修饰。
+    - fallback降级方法的形参必须和资源方法的形参一致，但可额外使用 `Throwable` 参数接收异常对象。
+    - fallback降级方法的返回值必须和资源方法的返回值一致。
+- 降级方法中使用 `e instanceof FlowException` 判断是否爆发流控规则异常。
+- 降级方法中使用 `e instanceof DegradeException` 判断是否爆发熔断规则异常。
+- 降级方法中使用 `e instanceof AuthorityException` 判断是否爆发授权规则异常。
+- 降级方法中使用 `e instanceof SystemBlockException` 判断是否爆发系统规则异常。
 
 ## 流控降级规则
 
@@ -251,52 +268,53 @@
     - 直接：对自己设置流控规则，触发规则则自己被限流。
     - 关联：对自己关联的资源设置流控规则，关联的资源触发规则，则自己被限流，即自己优先级比关联资源高。
     - 链路：从调用来源设置流控规则，触发规则则自己被限流，当前sentinel版本不支持。
-- 流控效果：
+- 流控效果：sentinel流控类型分快速失败，热启动和排队等待三种：
     - 快速失败：直接失败，抛出异常，简单粗暴，默认值。
     - Warm Up：先从阈值的1/3开始缓慢增长到阈值，以缓冲突然而来的大流量。
     - 排队等待：让请求匀速通过，超出阈值的请求排队等待直到超时。
 
-**武技：** 开发流控降级方法：
-- 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
-    - 形参必须和对应的控制方法一致，可额外使用 `Throwable` 参数接收异常信息。
-    - 方法必须被public和static修饰，返回值必须和对应的控制方法保持一致。
-    - 使用 `e instanceof FlowException` 判断是否爆发流控规则异常。
+**武技：** 开发控制方法并部署为sentinel资源：
 - 开发控制方法 `controller.SentinelController.execute()`：
-    - 对方法标记 `@SentinelResource()` 以声明该方法是一个sentinel资源，允许被sentinel监控。
-    - 注解中使用 `value` 设置资源名，该资源名会在sentinel管控台显示。
-    - 注解中使用 `fallbackClass` 设置降级类的class对象。
-    - 注解中使用 `fallback` 设置降级处理类中的降级处理方法名。
-- 依次启动nacos后台，sentinel后台和用户服务。
+    - 使用 `@RequestMapping` 指定接口地址。
+    - 对方法标记 `@SentinelResource` 以声明该方法是一个sentinel资源，允许被sentinel监控。
+    - 注解中使用 `value="execute"` 设置资源名，该资源名会在sentinel管控台显示。
+    - 注解中使用 `fallbackClass=SentinelFallback.class` 设置降级类的class对象。
+    - 注解中使用 `fallback="commNoArgFallBack"` 设置降级处理类中的降级处理方法名。
+- 依次启动nacos后台，sentinel后台和用户微服务。
 - cli: `localhost:8010/api/sentinel/execute`：
-    - 查看sentinel管控台，点击簇点链路，找到被监控的资源（需要先发送一次请求之后才能看见）。
+    - 查看sentinel管控台，点击簇点链路，找到被监控的资源。
+    - 需要使用浏览器先发送一次请求之后才能看见该请求的簇点链路。
 
 **武技：** 测试QPS类型 + 直接模式 + 快速失败效果的流控规则：
-- 在sentinel管控台新增流控规则：每秒请求量超过3时流控：
-    - 填写资源名，选择QPS，阈值填写3，点击新增。
+- 在sentinel管控台新增流控规则：
+    - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
+    - 流控类型选择QPS，阈值填写3并点击新增，表示每秒请求量超过3个时降级。
     - 针对来源默认为default，表示针对所有来源（服务）进行限制。
-- Jmeter压测 `localhost:8010/api/sentinel/execute` 请求，观察IDEA控制台：
-    - 配置1个线程分别发送100次请求，1个线程要在0.5s内全部启动。
-    - 发现该资源因QPS过高而被限流降级，IDEA控制台爆发 `FlowException` 异常。
+- Jmeter压测 `localhost:8010/api/sentinel/execute` 请求：
+    - 配置1个线程发送10次请求，该线程要在0.5s内启动。
+    - 发现该资源因QPS过高而被降级，IDEA控制台爆发 `FlowException` 异常。
 
 **武技：** 测试线程数类型 + 直接模式 + 快速失败效果的流控规则：
-- 在sentinel管控台新增流控规则：当访问该资源的线程并发数超过2时流控：
-    - 填写资源名，选择线程，阈值填写2，点击新增。
+- 在sentinel管控台新增流控规则：
+    - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
+    - 流控类型选择线程，阈值填写2并点击新增，表示当访问该资源的线程并发数超过2时降级。
     - 针对来源默认为default，表示针对所有来源（服务）进行限制。
-- Jmeter压测 `localhost:8010/api/sentinel/execute` 请求，观察IDEA控制台：
-    - 配置3个线程分别发送100次请求，3个线程要在0.5s内全部启动。
-    - 发现该资源因QPS过高而被限流降级，IDEA控制台爆发 `FlowException` 异常。
+- Jmeter压测 `localhost:8010/api/sentinel/execute` 请求：
+    - 配置3个线程分别发送10次请求，3个线程要在0.5s内全部启动。
+    - 发现该资源因线程并发数过高而被降级，IDEA控制台爆发 `FlowException` 异常。
 
 **武技：** 测试QPS类型 + 关联模式 + 快速失败效果的流控规则：
 - 开发控制方法 `controller.SentinelController.execute2()`：
     - 使用 `@RequestMapping` 指定接口地址。
     - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
 - 在sentinel管控台对资源 `execute` 新增流控规则：
-    - 填写资源名，选择QPS，阈值填写1。
+    - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
+    - 流控类型选择QPS，阈值填写1，表示当访问该资源的线程并发数超过1时降级。
     - 点击高级选项，填写关联资源为 `execute2` 并点击新增。
-- Jmeter压测 `localhost:8010/api/sentinel/execute2` 请求，观察IDEA控制台：
-    - 配置3个线程分别发送永久次请求，3个线程要在0.5s内全部启动。
-- 启动Jmeter压测的同时使用浏览器访问 `localhost:8010/api/sentinel/execute`：
-    - 发现该资源成功被其关联的 `execute2` 资源连累而被限流降级，IDEA控制台爆发 `FlowException` 异常。
+- Jmeter压测 `localhost:8010/api/sentinel/execute2` 请求：
+    - 配置3个线程分别发送无限次请求，3个线程要在0.5s内全部启动。
+- cli：`localhost:8010/api/sentinel/execute`：在Jmeter压测 `execute2` 资源的同时访问：
+    - 发现 `execute` 资源被其关联的 `execute2` 资源连累而被降级，IDEA控制台爆发 `FlowException` 异常。
 
 ## 熔断降级规则
 
@@ -314,32 +332,36 @@
 **武技：** 测试RT熔断降级规则：
 - 开发控制方法 `controller.SentinelController.rt()`：
     - 使用 `@RequestMapping` 指定接口地址。
-    - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
+    - 对方法标记 `@SentinelResource` 以声明该方法是一个sentinel资源，允许被sentinel监控。
+    - 注解中使用 `value="rt"` 设置资源名，该资源名会在sentinel管控台显示。
+    - 注解中使用 `fallbackClass=SentinelFallback.class` 设置降级类的class对象。
+    - 注解中使用 `fallback="commNoArgFallBack"` 设置降级处理类中的降级处理方法名。
     - 方法内使用 `TimeUnit.SECONDS.sleep(1L)` 睡眠1s以模拟业务耗时。
-- 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
-    - 使用 `e instanceof DegradeException` 判断是否爆发熔断规则异常。
+- 依次启动nacos后台，sentinel后台和用户微服务。
 - 在sentinel管控台新增降级规则：
-    - 填写资源名，降级策略选择RT。
-    - RT窗口填写500，表示平均响应时间超过500ms时准备熔断降级。
-    - 时间窗口填写2，表示熔断时间为2s，2s内均返回降级方法提供的数据，2s后尝试恢复访问。
-- Jmeter压测 `localhost:8010/api/sentinel/rt` 请求，观察IDEA控制台：
-    - 配置1个线程分别发送10次请求，1个线程要在0.5s内全部启动。
-    - 发现资源方法因平均响应时间太慢而被熔断降级2s，IDEA控制台爆发 `DegradeException` 异常。
+    - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
+    - 降级策略选择RT，阈值填写500，时间窗口填写2并点击新增，表示平均RT时间超过500ms时降级2s，2s后恢复访问。
+- Jmeter压测 `localhost:8010/api/sentinel/rt` 请求：
+    - 配置1个线程发送10次请求，该线程要在0.5s内启动。
+    - 发现资源方法因平均响应时间太慢而被降级，IDEA控制台爆发 `DegradeException` 异常。
     - 2s后重新发送请求，发现资源方法已经恢复正常访问。
 
 **武技：** 测试异常比例熔断降级规则：
 - 开发控制方法 `controller.SentinelController.ex()`：
     - 使用 `@RequestMapping` 指定接口地址。
-    - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
+    - 对方法标记 `@SentinelResource` 以声明该方法是一个sentinel资源，允许被sentinel监控。
+    - 注解中使用 `value="ex"` 设置资源名，该资源名会在sentinel管控台显示。
+    - 注解中使用 `fallbackClass=SentinelFallback.class` 设置降级类的class对象。
+    - 注解中使用 `fallback="commNoArgFallBack"` 设置降级处理类中的降级处理方法名。
     - 开发一个计数器属性，起始值为0。
     - 在方法内部配合计数器，每访问到第3次就抛出一个异常，模拟0.33的异常率。
+- 依次启动nacos后台，sentinel后台和用户微服务。
 - 在sentinel管控台新增降级规则：
-    - 填写资源名，降级策略选择异常比例。
-    - 异常比例窗口填写0.25，表示每秒异常率超过25%时等待熔断。
-    - 时间窗口填写2，表示熔断时间为2s，2s内均返回降级方法提供的数据，2s后尝试恢复访问。
-- Jmeter压测 `localhost:8010/api/sentinel/ex` 请求，观察IDEA控制台：
-    - 配置1个线程分别发送10次请求，1个线程要在0.5s内全部启动。
-    - 发现资源方法因异常率太高而被熔断降级2s，IDEA控制台爆发 `DegradeException` 异常。
+    - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
+    - 降级策略选择异常比例，阈值填写0.3，时间窗口填写2并点击新增，表示异常率超过30%时降级2s，2s后恢复访问。
+- Jmeter压测 `localhost:8010/api/sentinel/ex` 请求：
+    - 配置1个线程发送10次请求，该线程要在0.5s内启动。
+    - 发现资源方法因异常率太高而被降级，IDEA控制台爆发 `DegradeException` 异常。
     - 2s后重新发送请求，发现资源方法已经恢复正常访问。
 
 ## 授权降级规则
@@ -351,16 +373,18 @@
 **武技：** 测试授权降级规则：
 - 开发控制方法 `controller.SentinelController.auth()`：
     - 使用 `@RequestMapping` 指定接口地址。
-    - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
-- 开发配置类 `config.AuthConfig`：
+    - 对方法标记 `@SentinelResource` 以声明该方法是一个sentinel资源，允许被sentinel监控。
+    - 注解中使用 `value="auth"` 设置资源名，该资源名会在sentinel管控台显示。
+    - 注解中使用 `fallbackClass=SentinelFallback.class` 设置降级类的class对象。
+    - 注解中使用 `fallback="commNoArgFallBack"` 设置降级处理类中的降级处理方法名。
+- 开发配置类 `config.AuthConfig`：该配置类用于拦截请求参数/请求头中的标识：
     - 标记 `@Component` 以加入spring容器。
-    - 实现 `c.a.c.s.a.s.c.RequestOriginParser` 接口。
-    - 重写 `parseOrigin()` 方法，方法参数就是HttpServletRequest请求对象。
-    - 分别从请求参数和请求头中获取标识，标识名自定义，方法最终返回该标识。
-- 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
-    - 使用 `e instanceof AuthorityException` 判断是否爆发授权规则异常。
+    - 实现 `c.a.c.s.a.s.c.RequestOriginParser` 接口并重写 `parseOrigin()` 方法，参数是请求对象。
+    - 通过请求对象，分别从请求参数和请求头中获取标识，标识名自定义，方法最终返回该标识对象。
+- 依次启动nacos后台，sentinel后台和用户微服务。
 - 在sentinel管控台新增授权规则：
-    - 填写资源名，流控应用填 `a,b`，授权类型选择黑名单，表示携带 `标识名=a/b` 的请求不可以访问我。
+    - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
+    - 填写资源名，流控应用填写 `a,b`，授权类型选择黑名单，表示携带 `标识名=a/b` 的请求不可以访问我。
 - cli: `localhost:8010/api/sentinel/auth`：访问成功。
 - cli: `localhost:8010/api/sentinel/auth?app=c`：访问成功。
 - cli：`localhost:8010/api/sentinel/auth?app=a`：访问失败：
@@ -371,18 +395,27 @@
 **心法：** 热点降级规则粒度更细，可以根据方法的形参对方法进行降级规则控制。
 
 **武技：** 测试热点规则：
-- 开发控制方法 `controller.SentinelController.param()`：
+- 开发控制方法 `controller.SentinelController.param(String name, Integer age)`：
     - 使用 `@RequestMapping` 指定接口地址。
-    - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
-    - 开发两个参数：`(String name, Integer age)`。
+    - 对方法标记 `@SentinelResource` 以声明该方法是一个sentinel资源，允许被sentinel监控。
+    - 注解中使用 `value="param"` 设置资源名，该资源名会在sentinel管控台显示。
+    - 注解中使用 `fallbackClass=SentinelFallback.class` 设置降级类的class对象。
+    - 注解中使用 `fallback="commNoArgFallBack"` 设置降级处理类中的降级处理方法名。
+- 开发降级方法 `fallback.SentinelFallback.param(String name, Integer age, Throwable e)`：
+    - fallback降级方法必须被public和static修饰。
+    - fallback降级方法的形参必须和资源方法的形参一致，但可额外使用 `Throwable` 参数接收异常对象。
+    - fallback降级方法的返回值必须和资源方法的返回值一致。
+    - 降级方法中使用 `e instanceof ParamFlowException` 判断是否爆发热点规则异常。
+- 依次启动nacos后台，sentinel后台和用户微服务。
 - 在sentinel管控台新增热点规则：
-    - 填写资源名，限流模式必须选择QPS模式。
+    - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
+    - 流控模式必须选择QPS模式，否则失效。
     - 参数索引填0，单机阈值填1，表示对资源方法的0号参数进行流控，QPS超过1则直接限流。
     - 统计窗口时长：默认填写1秒，表示以1秒内的统计结果为准。
 - cli: `localhost:8010/api/sentinel/param`：请求中没携带name参数，不降级。
-- cli: `localhost:8010/api/sentinel/param?Age=18`：请求中没携带name参数，不降级。
+- cli: `localhost:8010/api/sentinel/param?age=18`：请求中没携带name参数，不降级。
 - cli: `localhost:8010/api/sentinel/param?name=admin`：
-    - 请求中携带name参数，QPS超过1就会被降级，IDEA控制台爆发 `` 异常。
+    - 请求中携带name参数，QPS超过1就会被降级，IDEA控制台爆发 `ParamFlowException` 异常。
 
 ## 规则持久化
 

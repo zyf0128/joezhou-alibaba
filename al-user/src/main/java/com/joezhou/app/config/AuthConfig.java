@@ -19,7 +19,6 @@ public class AuthConfig implements RequestOriginParser {
         if (app == null) {
             app = httpServletRequest.getHeader("app");
         }
-        log.info("从请求参数/请求头中获取app标识：{}", app);
         return app;
     }
 }

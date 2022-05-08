@@ -33,7 +33,7 @@ public class SentinelController {
      */
     @SentinelResource(value = "execute",
             fallbackClass = SentinelFallback.class,
-            fallback = "commNoArgFallBack")
+            fallback = "fallback")
     @RequestMapping("execute")
     public String execute() {
         log.info("接收到请求：调用execute()");
@@ -61,7 +61,7 @@ public class SentinelController {
      */
     @SentinelResource(value = "rt",
             fallbackClass = SentinelFallback.class,
-            fallback = "commNoArgFallBack")
+            fallback = "fallback")
     @RequestMapping("rt")
     @SneakyThrows
     public String rt() {
@@ -82,7 +82,7 @@ public class SentinelController {
      */
     @SentinelResource(value = "ex",
             fallbackClass = SentinelFallback.class,
-            fallback = "commNoArgFallBack")
+            fallback = "fallback")
     @RequestMapping("ex")
     @SneakyThrows
     public String ex() {
@@ -101,7 +101,7 @@ public class SentinelController {
      */
     @SentinelResource(value = "auth",
             fallbackClass = SentinelFallback.class,
-            fallback = "commNoArgFallBack")
+            fallback = "fallback")
     @RequestMapping("auth")
     public String auth() {
         log.info("接收到请求：调用auth()");

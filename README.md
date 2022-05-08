@@ -249,7 +249,7 @@
 
 **武技：** 开发无参的通用fallback降级方法：
 - 开发降级类 `fallback.SentinelFallback`：名称和未知随意。
-- 开发降级方法 `commNoArgFallBack(Throwable e)`：
+- 开发降级方法 `fallback(Throwable e)`：
     - fallback降级方法必须被public和static修饰。
     - fallback降级方法的形参必须和资源方法的形参一致，但可额外使用 `Throwable` 参数接收异常对象。
     - fallback降级方法的返回值必须和资源方法的返回值一致。

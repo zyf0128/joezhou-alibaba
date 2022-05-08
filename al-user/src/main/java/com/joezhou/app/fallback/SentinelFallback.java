@@ -21,7 +21,7 @@ public class SentinelFallback {
      * @param e 控制方法爆发的异常实例
      * @return 兜底数据
      */
-    public static String commNoArgFallBack(Throwable e) {
+    public static String fallback(Throwable e) {
         if (e instanceof FlowException) {
             log.error("您访问的太快或当前访问人数过多，请稍后重试...");
             return JacksonUtil.build(0, "您访问的太快或当前访问人数过多，请稍后重试...");

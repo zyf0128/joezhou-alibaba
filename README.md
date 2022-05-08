@@ -125,7 +125,7 @@
 **心法：** 注册中心用于实现服务治理，即实现各个微服务的自动化注册与发现：
 - 服务注册：每个服务都在注册中心中进行登记，最终形成一张服务列表，注册中心负责心跳监测，不可用的服务会被踢出列表。
 - 服务发现：服务调用方去注册中心中查看服务列表，以访问某服务。
-- 常见的注册中心：
+- 常见的注册中心产品：
     - Zookeeper：分布式服务框架，来自Apache，主要用于分布式架构的应用。  
     - Eureka：来自于SpringCloud-Netflix，主要作用就是做服务注册和发现，目前已经闭源。
     - Consul：基于GO语言开发的开源工具，主要面向分布式架构的应用。
@@ -133,9 +133,10 @@
     
 **武技：** 将用户/商品/订单微服务都注册到Nacos服务端：
 - 安装[Nacos](https://github.com/alibaba/nacos/releases)：
-    - `资源/nacos-server-1.1.4.zip`：解压缩即可。
-    - `%NACOS_HOME%\bin\startup.cmd`：建议使用cmd启动Nacos，观察地址和端口。
-    - `localhost:8848/nacos`：访问Nacos管控台，账密都是nacos。
+    - res：`nacos-server-1.1.4.zip`：解压缩即可。
+    - cmd：`cd %NACOS_HOME%\bin`：进入nacos家目录的bin文件中。
+    - cmd：`startup.cmd -m standalone`：以非集群模式启动Nacos，观察地址和端口。
+    - cli：`localhost:8848/nacos`：访问Nacos管控台，账密都是nacos。
 - 分别在三个微服务中添加Nacos依赖：
     - `com.alibaba.cloud.spring-cloud-starter-alibaba-nacos-discovery`
 - 分别在三个微服务的启动类上标记 `@EnableDiscoveryClient` 以开启Nacos功能。
@@ -145,7 +146,7 @@
 
 # 远程调用OpenFeign
 
-**心法：** OpenFeign是SpringCloud提供的一个声明式的伪Http客户端，用于远程调用，自带负载均衡效果，即可以将请求按一定规则分摊到多个微服务上：
+**心法：** OpenFeign是SpringCloud提供的一个声明式的伪http客户端，用于远程调用，自带负载均衡效果：
 - 客户端负载均衡：发送请求之前已经决定调用哪个服务节点，推荐使用。
 - 服务端负载均衡：在服务端决定使用哪个服务，如Nginx技术。
 
@@ -155,8 +156,8 @@
 - 在启动类上使用 `@EnableFeignClients` 开启OpenFeign功能。
 - 开发商品远程接口 `feign.ProductFeign`：
     - 标记 `@FeignClient("al-product")` 以声明为远程接口，并使用value值指定远程服务名。
-- 开发远程接口方法 `String selectById(@RequestParam("id") Integer id)`：
-    - 返回值/方法名/形参都必须和远程服务对应的控制方法保持一致，且形参必须标记 `@RequestParam()`。
+- 开发远程接口方法 `String selectById(@RequestParam Integer id)`：
+    - 返回值/方法名/形参都必须和远程服务对应的控制方法保持一致，且形参必须标记 `@RequestParam`。
     - 方法上标记 `@RequestMapping("/api..")` 并指定远程服务对应的控制方法的完整URL。
 - 开发订单业务接口 `service.OrderService`：开发下单方法：
     - `int insert(Order order)`：成功返回1，失败返回0。
@@ -196,8 +197,8 @@
 
 **心法：** 由于网络或自身等原因，服务无法保证100%可用，当某个服务挂掉时会上游任务堆积，多条线程阻塞，最终瘫痪整个服务，这就是雪崩效应，而服务容错技术的目的，就是保证服务雪落而不雪崩，常见容错手段如下：
 - 隔离：将系统按照一定原则划分成多个互不干扰的服务模块，当故障发生时，能将故障隔离在某模块内部而不扩散：
-    - 线程池隔离：为每个服务单独建立一个线程池，超出线程池限制直接fallback返回，优点是可以异步调用下游服务，缺点是线程频繁切换消耗CPU资源，适用于高并发且请求处理耗时较长的情况。
-    - 信号量隔离：设定一个信号量，超出信号量限制直接fallback返回，优点是一个线程执行到底，无线程切换开销，缺点是只能同步调用下游服务，当调用链比较长的情况下比较耗时，适用于高并发且请求处理耗时较短的情况。
+    - 线程池隔离：为每个服务单独建立一个线程池，超出线程池限制返回fallback兜底数据，优点是可以异步调用下游服务，缺点是线程频繁切换消耗CPU资源，适用于高并发且请求处理耗时较长的情况。
+    - 信号量隔离：设定一个信号量，超出信号量限制返回fallback兜底数据，优点是一个线程执行到底，无线程切换开销，缺点是只能同步调用下游服务，当调用链比较长的情况下比较耗时，适用于高并发且请求处理耗时较短的情况。
 - 超时：在上游服务调用下游服务的时候，设置一个最大响应时间，如果超过这个时间，下游未作出反应，就断开请求，释放掉线程。
 - 限流：限制系统的输入/输出流量以保证系统的稳定运行，一旦达到某设定的阈值，就要开启限流。
 - 熔断：当下游服务出现故障时，上游服务可以暂时熔断对下游服务的调用转而调用fallback方法以保全大局，每隔一段时间重新尝试调用。
@@ -206,34 +207,16 @@
 
 **武技：** 在用户微服务中整合sentinel：
 - 安装sentinel管控台，本质就是一个springboot应用：
-    - `资源/sentinel-dashboard-1.7.0.jar`
+    - res：`sentinel-dashboard-1.7.0.jar`
 - 启动sentinel管控台：
     - cmd: `java -Dserver.port=8088 -jar sentinel-dashboard-1.7.0.jar`：默认端口8080。
-- 访问sentinel管控台，账密都是sentinel：
-    - cli: `localhost:8088`
+- 访问sentinel管控台：
+    - cli: `localhost:8088`：账密都是sentinel。
 - 在用户微服务中添加依赖：
     - `com.alibaba.cloud.spring-cloud-starter-alibaba-sentinel`
 - 在用户微服务的主配添加：
     - `spring.cloud.sentinel.transport.port=8888`：跟控制台交流的内部端口号，随意指定一个未使用的端口即可。
-    - `spring.cloud.sentinel.transport.dashboard=localhost:8080`：配置sentinel管控台。
-- 开发一个通用的无参控制方法对应的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
-    - 形参必须和对应的控制方法一致，可额外使用 `Throwable` 参数接收异常信息。
-    - 方法必须被public和static修饰，返回值必须和对应的控制方法保持一致。
-    - 使用 `e instanceof FlowException` 判断是否是因为限流而触发的异常。
-    - 使用 `e instanceof DegradeException`：判断是否是因为熔断而触发的异常。
-    - 使用 `e instanceof AuthorityException`：判断是否是因为黑白名单限制而触发的异常。
-    - 使用 `e instanceof SystemBlockException`：判断是否是因为系统限制而触发的异常。
-    - 使用 `e instanceof ParamFlowException`：判断是否是因为参数限制而触发的异常。
-- 开发控制方法 `controller.SentinelController.execute()`：
-    - 标记 `@SentinelResource()` 以声明该方法是一个sentinel资源：
-    - 注解中使用 `value` 设置资源名。
-    - 注解中使用 `fallbackClass` 设置降级类。
-    - 注解中使用 `fallback` 设置降级处理类中的降级处理方法名。
-- 依次启动nacos后台，sentinel后台，用户服务。
-- cli: `localhost:8010/api/sentinel/execute`：
-    - 查看sentinel管控台，点击簇点链路，找到刚才发送的请求。
-    - 点击添加流控规则，QPS阈值设置为3。
-    - 再次快速发送请求，发现请求的资源（控制方法）被熔断降级。
+    - `spring.cloud.sentinel.transport.dashboard=localhost:8088`：配置sentinel管控台。
 
 ## 流控降级规则
 
@@ -250,32 +233,48 @@
     - Warm Up：先从阈值的1/3开始缓慢增长到阈值，以缓冲突然而来的大流量。
     - 排队等待：让请求匀速通过，超出阈值的请求排队等待直到超时。
 
+**武技：** 开发流控降级方法：
+- 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
+    - 形参必须和对应的控制方法一致，可额外使用 `Throwable` 参数接收异常信息。
+    - 方法必须被public和static修饰，返回值必须和对应的控制方法保持一致。
+    - 使用 `e instanceof FlowException` 判断是否爆发流控异常，否则返回 `"未知异常"`。
+- 开发控制方法 `controller.SentinelController.execute()`：
+    - 对方法标记 `@SentinelResource()` 以声明该方法是一个sentinel资源，允许被sentinel监控。
+    - 注解中使用 `value` 设置资源名，该资源名会在sentinel管控台显示。
+    - 注解中使用 `fallbackClass` 设置降级类的class对象。
+    - 注解中使用 `fallback` 设置降级处理类中的降级处理方法名。
+- 依次启动nacos后台，sentinel后台和用户服务。
+- cli: `localhost:8010/api/sentinel/execute`：
+    - 查看sentinel管控台，点击簇点链路，找到被监控的资源（需要先发送一次请求之后才能看见）。
+
 **武技：** 测试QPS类型 + 直接模式 + 快速失败效果的流控规则：
 - 在sentinel管控台新增流控规则：
     - 填写资源名，选择QPS，阈值填写3，点击新增：每秒请求量超过3时流控。
     - 针对来源默认为default，表示针对所有来源（服务）进行限制。
 - cli: `localhost:8010/api/sentinel/execute`：
-    - 浏览器快速刷新，发现当QPS超过3时，该资源被限制访问。
+    - 浏览器快速刷新，发现当QPS超过3时，该资源被限制访问，IDEA控制台爆发 `FlowException` 异常。
 
 **武技：** 测试线程数类型 + 直接模式 + 快速失败效果的流控规则：
 - 在sentinel管控台新增流控规则：
     - 填写资源名，选择线程，阈值填写2，点击新增：当访问该资源的线程并发数超过2时流控。
     - 针对来源默认为default，表示针对所有来源（服务）进行限制。
 - 安装Jmeter压测工具：
-    - `资源/apache-jmeter-5.2.1.zip`
+    - res：`apache-jmeter-5.2.1.zip`：解压缩即可。
 - 启动Jmeter压测工具：
-    - `%JMETER_HOME%\bin\jmeter.bat`：双击启动。
+    - cmd：`cd %JMETER_HOME%\bin`：进入Jmeter的bin目录。
+    - cmd：`jmeter.bat`：启动Jmeter，命令窗口不要关闭。
 - 调整Jmeter语言环境：
     - `Options -> Choose Language -> Chinese(Simplified)`
 - 添加线程组：用于设置线程信息：
-    - 右键 `Test Plan`：`添加 -> 线程(用户) -> 线程组`。
+    - 右键 `Test Plan`：依次选择 `添加 -> 线程(用户) -> 线程组` 进入线程组配置界面。
     - 配置3个线程永久无限发送请求，3个线程要在0.5s内全部启动。
 - 添加HTTP请求：用于设置请求路径：
-    - 右键 `线程组`：`添加 -> 取样器 -> HTTP请求`。
-    - 填写协议，服务器IP，端口和URL接口。
+    - 右键 `线程组`：依次选择 `添加 -> 取样器 -> HTTP请求` 进入HTTP请求配置界面。
+    - 填写协议，服务器IP地址，服务端端口号和请求的接口地址。
 - 添加结果树：用户观察请求结果：
-    - 右键 `线程组`：`添加 -> 监听器 -> 观察结果树`。
-- 点击工具条中的启动按钮，开启Jmeter压测，观察IDEA控制台，发现该资源因线程数过多而被限流。
+    - 右键 `线程组`：依次选择 `添加 -> 监听器 -> 观察结果树` 添加一个结果树。
+- 点击工具条中的启动按钮，开启Jmeter压测，观察IDEA控制台：
+    - 发现该资源因线程数过多而被限流，IDEA控制台爆发 `FlowException` 异常。
 
 **武技：** 测试QPS类型 + 关联模式 + 快速失败效果的流控规则：
 - 开发控制方法 `controller.SentinelController.execute2()`：
@@ -285,7 +284,8 @@
     - 填写资源名，选择QPS，阈值填写1。
     - 点击高级选项，填写关联资源为 `execute2` 并点击新增。
     - 使用Jmeter配置3个线程永久无限向 `execute2` 发送请求，3个线程要在0.5s内全部启动。
-- cli: `localhost:8010/api/sentinel/execute`：资源被限流，成功被其关联的 `execute2` 资源连累。 
+- cli: `localhost:8010/api/sentinel/execute`：
+    - 资源被限流，成功被其关联的 `execute2` 资源连累，IDEA控制台爆发 `FlowException` 异常。
 
 ## 熔断降级规则
 
@@ -308,7 +308,8 @@
     - 填写资源名，降级策略选择RT。
     - RT窗口填写500，表示平均响应时间超过500ms时准备熔断。
     - 时间窗口填写5，表示熔断时间为5s，5s内均返回降级方法提供的数据，5s后尝试恢复访问。
-- cli: `localhost:8010/api/sentinel/rt`：发现因平均响应时间太慢而被熔断降级5s。 
+- cli: `localhost:8010/api/sentinel/rt`：
+    - 发现因平均响应时间太慢而被熔断降级5s，IDEA控制台爆发 `DegradeException` 异常。
 
 **武技：** 测试异常比例熔断降级规则：
 - 开发控制方法 `controller.SentinelController.ex()`：
@@ -320,7 +321,8 @@
     - 填写资源名，降级策略选择异常比例。
     - 异常比例窗口填写0.25，表示每秒异常率超过25%时等待熔断。
     - 时间窗口填写5，表示熔断时间为5s，5s内均返回降级方法提供的数据，5s后尝试恢复访问。
-- cli: `localhost:8010/api/sentinel/ex`：发现因异常率太高而被熔断降级5s。
+- cli: `localhost:8010/api/sentinel/ex`：
+    - 发现因异常率太高而被熔断降级5s，IDEA控制台爆发 `DegradeException` 异常。
 
 ## 授权降级规则
 
@@ -339,10 +341,10 @@
     - 分别从请求参数和请求头中获取标识，标识名自定义，方法最终返回该标识。
 - 在sentinel管控台新增授权规则：
     - 填写资源名，流控应用填 `a,b`，授权类型选择黑名单，表示携带 `标识名=a/b` 的请求不可以访问我。
-- cli: 
-    - `localhost:8010/api/sentinel/auth`：不降级。
-    - `localhost:8010/api/sentinel/auth?app=c`：不降级。
-    - `localhost:8010/api/sentinel/auth?app=a`：直接降级。
+- cli: `localhost:8010/api/sentinel/auth`：不降级。
+- cli: `localhost:8010/api/sentinel/auth?app=c`：不降级。
+- cli：`localhost:8010/api/sentinel/auth?app=a`：
+    - 直接降级，IDEA控制台爆发 `AuthorityException` 异常。
 
 ## 热点降级规则
 
@@ -357,10 +359,10 @@
     - 填写资源名，限流模式必须选择QPS模式。
     - 参数索引填0，单机阈值填1，表示对资源方法的0号参数进行流控，QPS超过1则直接限流。
     - 统计窗口时长：默认填写1秒，表示以1秒内的统计结果为准。
-- cli: 
-    - `localhost:8010/api/sentinel/param`：请求中没携带name参数，不降级。
-    - `localhost:8010/api/sentinel/param?Age=18`：请求中没携带name参数，不降级。
-    - `localhost:8010/api/sentinel/param?name=admin`：请求中携带name参数，QPS超过1就会被降级。
+- cli: `localhost:8010/api/sentinel/param`：请求中没携带name参数，不降级。
+- cli: `localhost:8010/api/sentinel/param?Age=18`：请求中没携带name参数，不降级。
+- cli: `localhost:8010/api/sentinel/param?name=admin`：
+    - 请求中携带name参数，QPS超过1就会被降级，IDEA控制台爆发 `` 异常。
 
 ## 规则持久化
 

@@ -237,7 +237,7 @@
 - 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
     - 形参必须和对应的控制方法一致，可额外使用 `Throwable` 参数接收异常信息。
     - 方法必须被public和static修饰，返回值必须和对应的控制方法保持一致。
-    - 使用 `e instanceof FlowException` 判断是否爆发流控异常，否则返回 `"未知异常"`。
+    - 使用 `e instanceof FlowException` 判断是否爆发流控异常。
 - 开发控制方法 `controller.SentinelController.execute()`：
     - 对方法标记 `@SentinelResource()` 以声明该方法是一个sentinel资源，允许被sentinel监控。
     - 注解中使用 `value` 设置资源名，该资源名会在sentinel管控台显示。
@@ -278,7 +278,7 @@
 
 **武技：** 测试QPS类型 + 关联模式 + 快速失败效果的流控规则：
 - 开发控制方法 `controller.SentinelController.execute2()`：
-    - 使用 `@RequestMapping` 指定接口URL。
+    - 使用 `@RequestMapping` 指定接口地址。
     - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
 - 在sentinel管控台对资源 `execute` 新增流控规则：
     - 填写资源名，选择QPS，阈值填写1。
@@ -290,20 +290,23 @@
 ## 熔断降级规则
 
 **心法：** 熔断降级是因为资源内部原因而触发的，比如资源运行太耗时，运行有异常等：
-- RT：当资源的平均响应时间超过阈值（单位ms）就准备熔断，若接下来1s内持续进入的5个请求的RT均超过阈值，则进行熔断：
-    - 时间窗口用于设置熔断多久，单位为秒，熔断时内任何访问该资源的请求都只能得到fallback数据，超时后方可尝试恢复访问。
-    - sentinel默认RT上限为4900ms，超出都视为4900ms，可在启动时通过 `-Dcsp.sentinel.statistic.max.rt=` 进行配置。
-- 异常比例：当资源的每秒异常数/每秒请求数量的比值超过阈值时，进行熔断降级：
-    - 时间窗口用于设置熔断多久，单位为秒，熔断时内任何访问该资源的请求都只能得到fallback数据，超时后方可尝试恢复访问。
+- RT：`Response Time` 响应时间，单位毫秒：
+    - 当资源的平均RT时间超过阈值，且接下来1s内持续进入的5个请求的RT时间均超过阈值，则立刻熔断该资源。
+    - 时间窗口表示熔断多少秒，该时间内，任何访问该资源的请求都只能得到fallback数据，超时后方可尝试恢复访问。
+    - RT阈值默认上限为4900ms，超出都视为4900ms，启动时可通过 `-Dcsp.sentinel.statistic.max.rt=` 进行配置。
+- 异常比例：当资源的 `每秒异常数/每秒请求数量` 的比值超过阈值时，进行熔断降级：
+    - 时间窗口表示熔断多少秒，该时间内，任何访问该资源的请求都只能得到fallback数据，超时后方可尝试恢复访问。
     - 异常比率的阈值范围是0到1之间的浮点数，包括两端值。
 - 异常数：当资源1分钟内的异常数超过阈值时，进行熔断降级：
     - 该项时间窗口是分钟级的，时间窗口设置建议大于60s，否则容易资源结束熔断降级状态后再次进入熔断降级状态。
 
 **武技：** 测试RT熔断降级规则：
 - 开发控制方法 `controller.SentinelController.rt()`：
-    - 使用 `@RequestMapping` 指定接口URL。
+    - 使用 `@RequestMapping` 指定接口地址。
     - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
     - 方法内使用 `TimeUnit` 睡眠1s以模拟业务耗时。
+- 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
+    - 使用 `e instanceof DegradeException` 判断是否爆发熔断异常。
 - 在sentinel管控台新增降级规则：
     - 填写资源名，降级策略选择RT。
     - RT窗口填写500，表示平均响应时间超过500ms时准备熔断。
@@ -313,7 +316,7 @@
 
 **武技：** 测试异常比例熔断降级规则：
 - 开发控制方法 `controller.SentinelController.ex()`：
-    - 使用 `@RequestMapping` 指定接口URL。
+    - 使用 `@RequestMapping` 指定接口地址。
     - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
     - 开发一个计数器，起始值为0。
     - 在方法内部配合计数器，每访问到第3次就抛出一个异常，模拟0.33的异常率。
@@ -332,7 +335,7 @@
 
 **武技：** 测试授权降级规则：
 - 开发控制方法 `controller.SentinelController.auth()`：
-    - 使用 `@RequestMapping` 指定接口URL。
+    - 使用 `@RequestMapping` 指定接口地址。
     - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
 - 开发配置类 `config.AuthConfig`：
     - 标记 `@Component` 以加入spring容器。
@@ -352,7 +355,7 @@
 
 **武技：** 测试热点规则：
 - 开发控制方法 `controller.SentinelController.param()`：
-    - 使用 `@RequestMapping` 指定接口URL。
+    - 使用 `@RequestMapping` 指定接口地址。
     - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
     - 开发两个参数：`(String name, Integer age)`。
 - 在sentinel管控台新增热点规则：

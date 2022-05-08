@@ -218,6 +218,29 @@
     - `spring.cloud.sentinel.transport.port=8888`：跟控制台交流的内部端口号，随意指定一个未使用的端口即可。
     - `spring.cloud.sentinel.transport.dashboard=localhost:8088`：配置sentinel管控台。
 
+## 安装Jmeter
+
+**武技：**
+- 安装Jmeter压测工具：
+    - res：`apache-jmeter-5.2.1.zip`：解压缩即可。
+- 启动Jmeter压测工具：
+    - cmd：`cd %JMETER_HOME%\bin`：进入Jmeter的bin目录。
+    - cmd：`jmeter.bat`：启动Jmeter，命令窗口不要关闭。
+- 调整Jmeter语言环境：
+    - `Options -> Choose Language -> Chinese(Simplified)`
+- 添加线程组：用于设置线程信息：
+    - 右键 `Test Plan`：依次选择 `添加 -> 线程(用户) -> 线程组` 进入线程组配置界面。
+    - `线程数`：表示当前要开启多少个线程。
+    - `Ramp-Up时间`：表示全部线程在多少秒内启动完成。
+    - `循环次数`：表示全部线程分别发送多少次请求，勾选 `永远` 表示一直发送。
+- 添加HTTP请求：用于设置请求路径：
+    - 右键 `线程组`：依次选择 `添加 -> 取样器 -> HTTP请求` 进入HTTP请求配置界面。
+    - 填写协议如 `http`，服务器IP如 `localhost`，端口号如 `8010`，请求接口地址如 `/api/user/test`。
+- 添加结果树：用户观察请求结果：
+    - 右键 `线程组`：依次选择 `添加 -> 监听器 -> 观察结果树` 添加一个结果树。
+- 启动Jmeter压力测试：
+    - 右键 `线程组`，选择启动，可以单独启动指定的线程组。
+
 ## 流控降级规则
 
 **心法：** 流控降级是因为资源外部原因而触发的，比如限制请求数量，请求线程数量等：
@@ -237,7 +260,7 @@
 - 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
     - 形参必须和对应的控制方法一致，可额外使用 `Throwable` 参数接收异常信息。
     - 方法必须被public和static修饰，返回值必须和对应的控制方法保持一致。
-    - 使用 `e instanceof FlowException` 判断是否爆发流控异常。
+    - 使用 `e instanceof FlowException` 判断是否爆发流控规则异常。
 - 开发控制方法 `controller.SentinelController.execute()`：
     - 对方法标记 `@SentinelResource()` 以声明该方法是一个sentinel资源，允许被sentinel监控。
     - 注解中使用 `value` 设置资源名，该资源名会在sentinel管控台显示。
@@ -248,33 +271,20 @@
     - 查看sentinel管控台，点击簇点链路，找到被监控的资源（需要先发送一次请求之后才能看见）。
 
 **武技：** 测试QPS类型 + 直接模式 + 快速失败效果的流控规则：
-- 在sentinel管控台新增流控规则：
-    - 填写资源名，选择QPS，阈值填写3，点击新增：每秒请求量超过3时流控。
+- 在sentinel管控台新增流控规则：每秒请求量超过3时流控：
+    - 填写资源名，选择QPS，阈值填写3，点击新增。
     - 针对来源默认为default，表示针对所有来源（服务）进行限制。
-- cli: `localhost:8010/api/sentinel/execute`：
-    - 浏览器快速刷新，发现当QPS超过3时，该资源被限制访问，IDEA控制台爆发 `FlowException` 异常。
+- Jmeter压测 `localhost:8010/api/sentinel/execute` 请求，观察IDEA控制台：
+    - 配置1个线程分别发送100次请求，1个线程要在0.5s内全部启动。
+    - 发现该资源因QPS过高而被限流降级，IDEA控制台爆发 `FlowException` 异常。
 
 **武技：** 测试线程数类型 + 直接模式 + 快速失败效果的流控规则：
-- 在sentinel管控台新增流控规则：
-    - 填写资源名，选择线程，阈值填写2，点击新增：当访问该资源的线程并发数超过2时流控。
+- 在sentinel管控台新增流控规则：当访问该资源的线程并发数超过2时流控：
+    - 填写资源名，选择线程，阈值填写2，点击新增。
     - 针对来源默认为default，表示针对所有来源（服务）进行限制。
-- 安装Jmeter压测工具：
-    - res：`apache-jmeter-5.2.1.zip`：解压缩即可。
-- 启动Jmeter压测工具：
-    - cmd：`cd %JMETER_HOME%\bin`：进入Jmeter的bin目录。
-    - cmd：`jmeter.bat`：启动Jmeter，命令窗口不要关闭。
-- 调整Jmeter语言环境：
-    - `Options -> Choose Language -> Chinese(Simplified)`
-- 添加线程组：用于设置线程信息：
-    - 右键 `Test Plan`：依次选择 `添加 -> 线程(用户) -> 线程组` 进入线程组配置界面。
-    - 配置3个线程永久无限发送请求，3个线程要在0.5s内全部启动。
-- 添加HTTP请求：用于设置请求路径：
-    - 右键 `线程组`：依次选择 `添加 -> 取样器 -> HTTP请求` 进入HTTP请求配置界面。
-    - 填写协议，服务器IP地址，服务端端口号和请求的接口地址。
-- 添加结果树：用户观察请求结果：
-    - 右键 `线程组`：依次选择 `添加 -> 监听器 -> 观察结果树` 添加一个结果树。
-- 点击工具条中的启动按钮，开启Jmeter压测，观察IDEA控制台：
-    - 发现该资源因线程数过多而被限流，IDEA控制台爆发 `FlowException` 异常。
+- Jmeter压测 `localhost:8010/api/sentinel/execute` 请求，观察IDEA控制台：
+    - 配置3个线程分别发送100次请求，3个线程要在0.5s内全部启动。
+    - 发现该资源因QPS过高而被限流降级，IDEA控制台爆发 `FlowException` 异常。
 
 **武技：** 测试QPS类型 + 关联模式 + 快速失败效果的流控规则：
 - 开发控制方法 `controller.SentinelController.execute2()`：
@@ -283,9 +293,10 @@
 - 在sentinel管控台对资源 `execute` 新增流控规则：
     - 填写资源名，选择QPS，阈值填写1。
     - 点击高级选项，填写关联资源为 `execute2` 并点击新增。
-    - 使用Jmeter配置3个线程永久无限向 `execute2` 发送请求，3个线程要在0.5s内全部启动。
-- cli: `localhost:8010/api/sentinel/execute`：
-    - 资源被限流，成功被其关联的 `execute2` 资源连累，IDEA控制台爆发 `FlowException` 异常。
+- Jmeter压测 `localhost:8010/api/sentinel/execute2` 请求，观察IDEA控制台：
+    - 配置3个线程分别发送永久次请求，3个线程要在0.5s内全部启动。
+- 启动Jmeter压测的同时使用浏览器访问 `localhost:8010/api/sentinel/execute`：
+    - 发现该资源成功被其关联的 `execute2` 资源连累而被限流降级，IDEA控制台爆发 `FlowException` 异常。
 
 ## 熔断降级规则
 
@@ -306,13 +317,15 @@
     - 使用 `@SentinelResource` 指定资源名，降级类和降级方法。
     - 方法内使用 `TimeUnit.SECONDS.sleep(1L)` 睡眠1s以模拟业务耗时。
 - 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
-    - 使用 `e instanceof DegradeException` 判断是否爆发熔断异常。
+    - 使用 `e instanceof DegradeException` 判断是否爆发熔断规则异常。
 - 在sentinel管控台新增降级规则：
     - 填写资源名，降级策略选择RT。
     - RT窗口填写500，表示平均响应时间超过500ms时准备熔断降级。
-    - 时间窗口填写5，表示熔断时间为5s，5s内均返回降级方法提供的数据，5s后尝试恢复访问。
-- cli: `localhost:8010/api/sentinel/rt`：疯狂按F5刷新请求：
-    - 发现资源方法因平均响应时间太慢而被熔断降级5s，IDEA控制台爆发 `DegradeException` 异常。
+    - 时间窗口填写2，表示熔断时间为2s，2s内均返回降级方法提供的数据，2s后尝试恢复访问。
+- Jmeter压测 `localhost:8010/api/sentinel/rt` 请求，观察IDEA控制台：
+    - 配置1个线程分别发送10次请求，1个线程要在0.5s内全部启动。
+    - 发现资源方法因平均响应时间太慢而被熔断降级2s，IDEA控制台爆发 `DegradeException` 异常。
+    - 2s后重新发送请求，发现资源方法已经恢复正常访问。
 
 **武技：** 测试异常比例熔断降级规则：
 - 开发控制方法 `controller.SentinelController.ex()`：
@@ -323,13 +336,15 @@
 - 在sentinel管控台新增降级规则：
     - 填写资源名，降级策略选择异常比例。
     - 异常比例窗口填写0.25，表示每秒异常率超过25%时等待熔断。
-    - 时间窗口填写5，表示熔断时间为5s，5s内均返回降级方法提供的数据，5s后尝试恢复访问。
-- cli: `localhost:8010/api/sentinel/ex`：疯狂按F5刷新请求：
-    - 发现因异常率太高而被熔断降级5s，IDEA控制台爆发 `DegradeException` 异常。
+    - 时间窗口填写2，表示熔断时间为2s，2s内均返回降级方法提供的数据，2s后尝试恢复访问。
+- Jmeter压测 `localhost:8010/api/sentinel/ex` 请求，观察IDEA控制台：
+    - 配置1个线程分别发送10次请求，1个线程要在0.5s内全部启动。
+    - 发现资源方法因异常率太高而被熔断降级2s，IDEA控制台爆发 `DegradeException` 异常。
+    - 2s后重新发送请求，发现资源方法已经恢复正常访问。
 
 ## 授权降级规则
 
-**心法：** sentinel的授权规则用于对调用来源设置黑白名单，但需要调用方使用请求参数/请求头的方式传递一个变量作为标识：
+**心法：** sentinel的授权规则用于对调用来源设置黑白名单，需要调用方在请求参数/请求头中额外传递一个标识变量：
 - 配置白名单时：只有白名单内的来源可以访问我，其余都不行。
 - 配置黑名单时：黑名单内的来源都不可以访问我，其余都可以。
 
@@ -340,13 +355,15 @@
 - 开发配置类 `config.AuthConfig`：
     - 标记 `@Component` 以加入spring容器。
     - 实现 `c.a.c.s.a.s.c.RequestOriginParser` 接口。
-    - 重写 `parseOrigin()`，其参数就是HttpServletRequest请求对象。
+    - 重写 `parseOrigin()` 方法，方法参数就是HttpServletRequest请求对象。
     - 分别从请求参数和请求头中获取标识，标识名自定义，方法最终返回该标识。
+- 开发通用的降级方法 `fallback.SentinelFallback.commNoArgFallBack()`：
+    - 使用 `e instanceof AuthorityException` 判断是否爆发授权规则异常。
 - 在sentinel管控台新增授权规则：
     - 填写资源名，流控应用填 `a,b`，授权类型选择黑名单，表示携带 `标识名=a/b` 的请求不可以访问我。
-- cli: `localhost:8010/api/sentinel/auth`：不降级。
-- cli: `localhost:8010/api/sentinel/auth?app=c`：不降级。
-- cli：`localhost:8010/api/sentinel/auth?app=a`：
+- cli: `localhost:8010/api/sentinel/auth`：访问成功。
+- cli: `localhost:8010/api/sentinel/auth?app=c`：访问成功。
+- cli：`localhost:8010/api/sentinel/auth?app=a`：访问失败：
     - 直接降级，IDEA控制台爆发 `AuthorityException` 异常。
 
 ## 热点降级规则

@@ -23,16 +23,16 @@ public class SentinelFallback {
      */
     public static String commNoArgFallBack(Throwable e) {
         if (e instanceof FlowException) {
-            log.info("QPS过高或线程数过多，sentinel熔断降级");
+            log.error("流控降级", e);
             return JacksonUtil.build(0, "您访问的太快/或当前访问人数过多，请稍后重试...");
         } else if (e instanceof DegradeException) {
-            log.info("方法RT时间/异常比例超出阈值，sentinel熔断降级");
+            log.error("熔断降级", e);
             return JacksonUtil.build(0, "服务器响应超时或失败次数过多，请稍后重试...");
         } else if (e instanceof AuthorityException) {
-            log.info("请求来源权限不足，sentinel熔断降级");
+            log.info("授权降级");
             return JacksonUtil.build(0, "您无权访问该服务，请联系管理员...");
         } else if (e instanceof SystemBlockException) {
-            log.info("系统限制，sentinel熔断降级");
+            log.info("热点降级");
             return JacksonUtil.build(0, "系统限制，sentinel熔断降级");
         }
         return JacksonUtil.build(0, "服务器未知异常，请稍后重试...");

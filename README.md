@@ -424,7 +424,7 @@
 **心法：** sentinel管控台中设置的规则默认存放内存，重启服务就会重置，需要将其持久化到硬盘文件：
 - sentinel管控台通过API将规则推送至sentinel客户端并更新到内存。
 - sentinel客户端将内存中的规则持久化到本地文件。
-- sentinel管控台每次启动时候都读取本地文件中的规则并自动配置。
+- 每次重启微服务时，sentinel都会读取本地文件中的规则并自动配置。
 
 **武技：** 将al-user中的sentinel配置持久化：
 - 开发持久化配置类 `config.FilePersistenceConfig`：

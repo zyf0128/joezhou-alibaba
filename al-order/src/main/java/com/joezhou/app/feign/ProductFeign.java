@@ -1,5 +1,6 @@
 package com.joezhou.app.feign;
 
+import com.joezhou.app.util.JsonResult;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +18,7 @@ public interface ProductFeign {
      * @return 响应数据
      */
     @RequestMapping("/api/product/select-by-id")
-    String selectById(@RequestParam("id") Integer id);
+    JsonResult selectById(@RequestParam("id") Integer id);
 
     /**
      * 扣减库存
@@ -27,6 +28,6 @@ public interface ProductFeign {
      * @return 正数表示成功，零或负数表示失败
      */
     @RequestMapping("/api/product/reduce-inventory")
-    String reduceInventory(@RequestParam("product-id") Integer productId,
+    JsonResult reduceInventory(@RequestParam("product-id") Integer productId,
                            @RequestParam("number") Integer number);
 }

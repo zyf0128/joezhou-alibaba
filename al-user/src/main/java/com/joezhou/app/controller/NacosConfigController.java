@@ -1,6 +1,6 @@
 package com.joezhou.app.controller;
 
-import com.joezhou.app.util.JacksonUtil;
+import com.joezhou.app.util.JsonResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -20,8 +20,8 @@ public class NacosConfigController {
     private String env;
 
     @RequestMapping("get-env")
-    public String getEnv() {
+    public JsonResult getEnv() {
         log.info("接到一个查询请求：获取到当前nacos配置文件的env属性为 {}", env);
-        return JacksonUtil.build(env);
+        return JsonResult.ok(env);
     }
 }

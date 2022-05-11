@@ -2,7 +2,7 @@ package com.joezhou.app.controller;
 
 import com.joezhou.app.entity.User;
 import com.joezhou.app.service.UserService;
-import com.joezhou.app.util.JacksonUtil;
+import com.joezhou.app.util.JsonResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,14 +26,14 @@ public class UserController {
     private UserService userService;
 
     @RequestMapping("select-by-id")
-    public String selectById(@RequestParam("id") Integer id) {
+    public JsonResult selectById(@RequestParam("id") Integer id) {
         log.info("接收到一个查询请求，根据用户ID查询用户信息");
         User user = userService.getById(id);
         if (user == null) {
-            return JacksonUtil.build(0, "用户查询失败");
+            return JsonResult.fail(0, "用户查询失败");
         }
         log.info("查询请求执行成功，数据为 {}", user);
-        return JacksonUtil.build(user);
+        return JsonResult.ok(user);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.joezhou.app.feign;
 
 import com.joezhou.app.fallback.ProductFeignFallBack;
+import com.joezhou.app.util.JsonResult;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,5 +21,5 @@ public interface ProductFeign {
      * @return 响应数据
      */
     @RequestMapping("/api/product/select-by-id")
-    String selectById(@RequestParam("id") Integer id);
+    JsonResult selectById(@RequestParam("id") Integer id);
 }

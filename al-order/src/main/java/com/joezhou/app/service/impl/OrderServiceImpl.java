@@ -2,17 +2,16 @@ package com.joezhou.app.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joezhou.app.entity.Order;
+import com.joezhou.app.entity.Product;
 import com.joezhou.app.feign.ProductFeign;
 import com.joezhou.app.mapper.OrderMapper;
 import com.joezhou.app.service.OrderService;
-import com.joezhou.app.util.JacksonUtil;
+import com.joezhou.app.util.JsonResult;
 import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 /**
  * <p>
@@ -41,21 +40,20 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         // 通过远程接口ProductFeign调用根据主键查询商品信息的方法
         log.info("远程调用商品微服务：根据商品主键查询商品信息");
-        String productData = productFeign.selectById(productId);
+        JsonResult productResult = productFeign.selectById(productId);
 
         // 将响应数据解析为Map数据类型
-        Map productDataMap = JacksonUtil.parseToMap(productData);
-        if ((Integer) productDataMap.get("code") <= 0) {
+        if (productResult.getCode() <= 0) {
             log.info("远程调用商品微服务失败：未查寻到该商品");
             return 0;
         }
 
         // 获取响应数据中的data数据
-        Map dataMap = (Map) productDataMap.get("data");
-        log.info("远程调用商品微服务成功：查询到商品：{}", dataMap);
+        Product product = (Product) productResult.getData();
+        log.info("远程调用商品微服务成功：查询到商品：{}", product);
 
         // 获取data数据中的商品名productName
-        String productName = (String) dataMap.get("productName");
+        String productName = product.getProductName();
         log.info("获取到商品名：{}", productName);
 
         // 准备一个Order实体，购买人暂时写死，商品名从远程商品数据中获取
@@ -72,9 +70,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (insertResult > 0) {
             log.info("下单成功");
             // 下单成功后，扣减库存
-            String reduceResult = productFeign.reduceInventory(productId, number);
-            Map reduceResultDataMap = JacksonUtil.parseToMap(reduceResult);
-            if((Integer)reduceResultDataMap.get("code") <= 0){
+            JsonResult reduceResult = productFeign.reduceInventory(productId, number);
+            if (reduceResult.getCode() <= 0) {
                 log.info("远程调用商品微服务失败：扣减库存失败");
                 return 0;
             }

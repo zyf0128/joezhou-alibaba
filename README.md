@@ -413,10 +413,11 @@
     - 流控模式只能选择QPS模式。
     - 参数索引填0，单机阈值填1，表示对资源方法的0号参数进行流控，QPS超过1则直接降级。
     - 统计窗口时长：默认填写1秒，表示以1秒内的统计结果为准。
-- cli: `localhost:8010/api/sentinel/param`：请求中没携带0号参数 `age`，不限流。
-- cli: `localhost:8010/api/sentinel/param?name=admin`：请求中没携带0号参数 `age`，不限流。
-- cli: `localhost:8010/api/sentinel/param?age=18`：请求中携带了0号参数 `age`，限流。
-- cli: `localhost:8010/api/sentinel/param?age=18&name=admin`：请求中携带了0号参数 `age`，限流。
+- cli: `localhost:8010/api/sentinel`：
+    - `/param`：请求中没携带0号参数 `age`，不降级。
+    - `/param?name=admin`：请求中没携带0号参数 `age`，不降级。
+    - `/param?age=18`：请求中携带了0号参数 `age`，QPS超过阈值时降级。
+    - `/param?age=18&name=admin`：请求中携带了0号参数 `age`，QPS超过阈值时降级。
 
 ## 规则持久化
 

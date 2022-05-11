@@ -428,7 +428,7 @@
 
 **武技：** 将al-user中的sentinel配置持久化：
 - 开发持久化配置类 `config.FilePersistenceConfig`：
-    - 仅需要改动持久化文件的存放位置，其余代码拷贝即可。
+    - res：`资源/附件/sentinel持久化配置类.md`：仅需要改动持久化文件的存放位置，其余代码拷贝即可。
 - 在resources下开发 `META-INF/services` 目录（固定）：
     - 在目录中开发 `com.alibaba.csp.sentinel.init.InitFunc` 文件（固定）。
     - 在文件中拷贝持久化配置类全路径 `com.joezhou.app.config.FilePersistenceConfig`。

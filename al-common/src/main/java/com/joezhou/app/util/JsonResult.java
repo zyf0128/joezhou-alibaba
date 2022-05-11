@@ -127,4 +127,16 @@ public class JsonResult {
                 .setDateFormat(new SimpleDateFormat("yyyy/MM/dd hh:mm:ss"))
                 .readValue(json, c);
     }
+
+    /**
+     * 将Object类型的数据解析为指定类型的数据
+     *
+     * @param data 待解析数据
+     * @param c    指定的类型的class对象
+     * @param <T>  指定的类型
+     * @return 解析后的数据
+     */
+    public static <T> T parseData(Object data, Class<T> c) {
+        return parse(format(data), c);
+    }
 }

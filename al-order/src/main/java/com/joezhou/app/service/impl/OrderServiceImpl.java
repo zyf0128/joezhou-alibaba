@@ -49,7 +49,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
 
         // 获取响应数据中的data数据
-        Product product = (Product) productResult.getData();
+        Product product = JsonResult.parseData(productResult.getData(), Product.class);
         log.info("远程调用商品微服务成功：查询到商品：{}", product);
 
         // 获取data数据中的商品名productName

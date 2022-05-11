@@ -2,6 +2,7 @@
 /**
  * @author JoeZhou
  */
+@SuppressWarnings("all")
 public class FilePersistenceConfig implements InitFunc {
 
     @Override
@@ -20,7 +21,7 @@ public class FilePersistenceConfig implements InitFunc {
         this.createFileIfNotExits(authorityRulePath);
         this.createFileIfNotExits(paramFlowRulePath);
 
-        // 流控规则
+        // 流控降级规则
         ReadableDataSource<String, List<FlowRule>> flowRuleRds = new FileRefreshableDataSource<>(
                 flowRulePath,
                 flowRuleListParser
@@ -32,7 +33,7 @@ public class FilePersistenceConfig implements InitFunc {
         );
         WritableDataSourceRegistry.registerFlowDataSource(flowRuleWds);
 
-        // 降级规则
+        // 熔断降级规则
         ReadableDataSource<String, List<DegradeRule>> degradeRuleRds = new FileRefreshableDataSource<>(
                 degradeRulePath,
                 degradeRuleListParser
@@ -44,7 +45,7 @@ public class FilePersistenceConfig implements InitFunc {
         );
         WritableDataSourceRegistry.registerDegradeDataSource(degradeRuleWds);
 
-        // 系统规则
+        // 系统降级规则
         ReadableDataSource<String, List<SystemRule>> systemRuleRds = new FileRefreshableDataSource<>(
                 systemRulePath,
                 systemRuleListParser
@@ -56,7 +57,7 @@ public class FilePersistenceConfig implements InitFunc {
         );
         WritableDataSourceRegistry.registerSystemDataSource(systemRuleWds);
 
-        // 授权规则
+        // 授权降级规则
         ReadableDataSource<String, List<AuthorityRule>> authorityRuleRds = new FileRefreshableDataSource<>(
                 authorityRulePath,
                 authorityRuleListParser
@@ -68,7 +69,7 @@ public class FilePersistenceConfig implements InitFunc {
         );
         WritableDataSourceRegistry.registerAuthorityDataSource(authorityRuleWds);
 
-        // 热点参数规则
+        // 热点降级规则
         ReadableDataSource<String, List<ParamFlowRule>> paramFlowRuleRds = new FileRefreshableDataSource<>(
                 paramFlowRulePath,
                 paramFlowRuleListParser

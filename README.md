@@ -249,7 +249,7 @@
 
 **武技：** 开发无参的通用fallback降级方法：
 - 开发降级类 `fallback.SentinelFallback`：名称和未知随意。
-- 开发降级方法 `fallback(Throwable e)`：
+- 开发降级方法 `commNoArgFallBack(Throwable e)`：
     - fallback降级方法必须被public和static修饰。
     - fallback降级方法的形参必须和资源方法的形参一致，但可额外使用 `Throwable` 参数接收异常对象。
     - fallback降级方法的返回值必须和资源方法的返回值一致。
@@ -392,16 +392,17 @@
 
 ## 热点降级规则
 
-**心法：** 热点降级规则粒度更细，可以根据方法的形参对方法进行降级规则控制。
+**心法：** 热点降级规则粒度更细，可以根据控制方法的形参对方法进行降级规则控制。
 
 **武技：** 测试热点规则：
 - 开发控制方法 `controller.SentinelController.param(String name, Integer age)`：
     - 使用 `@RequestMapping` 指定接口地址。
+    - 方法参数分别标记 `@RequestParam(required = false)` 便于不传值测试。
     - 对方法标记 `@SentinelResource` 以声明该方法是一个sentinel资源，允许被sentinel监控。
     - 注解中使用 `value="param"` 设置资源名，该资源名会在sentinel管控台显示。
     - 注解中使用 `fallbackClass=SentinelFallback.class` 设置降级类的class对象。
-    - 注解中使用 `fallback="commNoArgFallBack"` 设置降级处理类中的降级处理方法名。
-- 开发降级方法 `fallback.SentinelFallback.param(String name, Integer age, Throwable e)`：
+    - 注解中使用 `fallback="paramFallback"` 设置降级处理类中的降级处理方法名。
+- 开发降级方法 `fallback.SentinelFallback.paramFallback(String name, Integer age, Throwable e)`：
     - fallback降级方法必须被public和static修饰。
     - fallback降级方法的形参必须和资源方法的形参一致，但可额外使用 `Throwable` 参数接收异常对象。
     - fallback降级方法的返回值必须和资源方法的返回值一致。
@@ -409,13 +410,13 @@
 - 依次启动nacos后台，sentinel后台和用户微服务。
 - 在sentinel管控台新增热点规则：
     - 填写资源名，即代码中 `@SentinelResource` 注解的 `value` 值。
-    - 流控模式必须选择QPS模式，否则失效。
-    - 参数索引填0，单机阈值填1，表示对资源方法的0号参数进行流控，QPS超过1则直接限流。
+    - 流控模式只能选择QPS模式。
+    - 参数索引填0，单机阈值填1，表示对资源方法的0号参数进行流控，QPS超过1则直接降级。
     - 统计窗口时长：默认填写1秒，表示以1秒内的统计结果为准。
-- cli: `localhost:8010/api/sentinel/param`：请求中没携带name参数，不降级。
-- cli: `localhost:8010/api/sentinel/param?age=18`：请求中没携带name参数，不降级。
-- cli: `localhost:8010/api/sentinel/param?name=admin`：
-    - 请求中携带name参数，QPS超过1就会被降级，IDEA控制台爆发 `ParamFlowException` 异常。
+- cli: `localhost:8010/api/sentinel/param`：请求中没携带0号参数 `age`，不限流。
+- cli: `localhost:8010/api/sentinel/param?name=admin`：请求中没携带0号参数 `age`，不限流。
+- cli: `localhost:8010/api/sentinel/param?age=18`：请求中携带了0号参数 `age`，限流。
+- cli: `localhost:8010/api/sentinel/param?age=18&name=admin`：请求中携带了0号参数 `age`，限流。
 
 ## 规则持久化
 
@@ -867,3 +868,5 @@
 - 在订单微服务的下单业务方法 `insert()` 中添加seata事务注解以开启全局事务：
     - `@GlobalTransactional(rollbackFor = Exception.class)`
 - 依次启动nacos，seata，商品微服务，订单微服务，API网关，并访问订单微服务的下单接口。
+
+# 分布式锁

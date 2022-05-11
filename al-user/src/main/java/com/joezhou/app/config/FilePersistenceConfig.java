@@ -28,7 +28,7 @@ public class FilePersistenceConfig implements InitFunc {
 
     @Override
     public void init() throws Exception {
-        String ruleDir = "D:/coder/java/sentinel/al-user-rules";
+        String ruleDir = "D:/sentinel/al-user-rules";
         String flowRulePath = ruleDir + "/flow-rule.json";
         String degradeRulePath = ruleDir + "/degrade-rule.json";
         String systemRulePath = ruleDir + "/system-rule.json";

@@ -394,7 +394,7 @@
 
 **心法：** 热点降级规则粒度更细，可以根据控制方法的形参对方法进行降级规则控制。
 
-**武技：** 测试热点规则：
+**武技：** 测试热点降级规则：
 - 开发控制方法 `controller.SentinelController.param(String name, Integer age)`：
     - 使用 `@RequestMapping` 指定接口地址。
     - 方法参数分别标记 `@RequestParam(required = false)` 便于不传值测试。

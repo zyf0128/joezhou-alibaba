@@ -96,6 +96,13 @@ public class OrderController {
         return orderService.save(order) ? JsonResult.ok() : JsonResult.fail();
     }
 
+    /**
+     * 添加订单记录，业务层进行远程调用商品名，扣减库存，发送通知等业务
+     * cli: http://localhost:8083/api/order/add-order?id=..
+     *
+     * @param order 订单实体
+     * @return 响应操作成功/失败信息
+     */
     @RequestMapping("add-order")
     public JsonResult addOrder(Order order) {
         log.info("接收到一个下单请求，请求参数为 {}", order);

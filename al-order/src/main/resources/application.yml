@@ -9,6 +9,7 @@ spring:
     url: jdbc:mysql://localhost:3306/alibaba?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8
     username: alibaba
     password: alibaba
+    type: com.alibaba.druid.pool.DruidDataSource
   cloud:
     nacos:
       discovery:
@@ -22,10 +23,15 @@ spring:
 
 # 整合mybatis-plus
 mybatis-plus:
-  mapper-locations: classpath:mapper/*Mapper.xml
-  type-aliases-package: com.joezhou.app.entity
+  mapper-locations: classpath:mapper/*Mapper.xml # Mapper配置扫描
+  type-aliases-package: com.joezhou.app.entity # 别名包扫描
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 控制台打印SQL
+    map-underscore-to-camel-case: true # 下划线转驼峰
+    cache-enabled: true # 开启二级缓存
+    lazy-loading-enabled: true # 开启延迟加载
+    aggressive-lazy-loading: false # 关闭积极加载
+
 
 # 整合rmq
 rocketmq:

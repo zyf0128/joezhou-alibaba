@@ -42,7 +42,7 @@
 **武技：** 在父项目中开发maven-jar通用服务 `al-common`：
 - 查看父项目中的 `<modules>` 中是否添加了 `al-common` 子模块。
 - 开发工具类 `util.JsonResult` 用于统一响应数据格式。
-- 添加依赖：不要在父项目中添加依赖，因为后续的网关等服务不需要引入这些依赖：
+- 添加依赖：不要在父项目中添加依赖，因为后续的网关等微服务不需要引入这些依赖：
     - `org.projectlombok.lombok`
     - `org.springframework.boot.spring-boot-starter-test`
     - `com.baomidou.mybatis-plus-boot-starter(3.4.1)`
@@ -61,13 +61,12 @@
 - 添加依赖：
     - `com.joezhou.al-common(1.0-SNAPSHOT)`
     - `org.springframework.boot.spring-boot-starter-web`
-- 将MBP生成的和用户相关的三层代码拷贝到src中，xml拷贝到classpath:mapper目录下。
 - 开发主配 `application.yml`：yaml文件中的冒号后面需要有一个空格，并以缩进来表示层级关系：
-    - `server.port=8010`：端口。
+    - `server.port=8010`：微服务端口。
     - `spring.application.name=al-user`：微服务名。
-    - `spring.datasource.driver-class-name/url/username/password`：数据源。
-    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：连接池。 
-- 开发启动类 `app.UserApp`：标记 `@SpringBootApplication`：
+    - `spring.datasource.driver-class-name/url/username/password`：数据源四项。
+    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：使用Druid连接池。 
+- 开发启动类 `app.UserApp`：标记 `@SpringBootApplication` 注解：
     - `SpringApplication.run(UserApp.class, args)`
 
 ## 开发商品微服务
@@ -78,12 +77,12 @@
     - `com.joezhou.al-common(1.0-SNAPSHOT)`
     - `org.springframework.boot.spring-boot-starter-web`
 - 将MBP生成的和商品相关的三层代码拷贝到src中，xml拷贝到classpath:mapper目录下。
-- 开发主配 `application.yml`：
-    - `server.port=8020`：端口。
+- 开发主配 `application.yml`：yaml文件中的冒号后面需要有一个空格，并以缩进来表示层级关系：
+    - `server.port=8020`：微服务端口。
     - `spring.application.name=al-product`：微服务名。
-    - `spring.datasource.driver-class-name/url/username/password`：数据源。
-    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：连接池。 
-- 开发启动类：`app.ProductApp` 并标记 `@SpringBootApplication`：
+    - `spring.datasource.driver-class-name/url/username/password`：数据源四项。
+    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：使用Druid连接池。 
+- 开发启动类：`app.ProductApp` 并标记 `@SpringBootApplication` 注解：
     - `SpringApplication.run(ProductApp.class, args)`
 
 ## 开发订单微服务
@@ -93,13 +92,12 @@
 - 添加依赖：
     - `com.joezhou.al-common(1.0-SNAPSHOT)`
     - `org.springframework.boot.spring-boot-starter-web`
-- 将MBP生成的和订单相关的三层代码拷贝到src中，xml拷贝到classpath:mapper目录下。
-- 开发主配 `application.yml`：
-    - `server.port=8030`：端口。
+- 开发主配 `application.yml`：yaml文件中的冒号后面需要有一个空格，并以缩进来表示层级关系：
+    - `server.port=8030`：微服务端口。
     - `spring.application.name=al-order`：微服务名。
-    - `spring.datasource.driver-class-name/url/username/password`：数据源。
-    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：连接池。 
-- 开发启动类：`app.OrderApp` 并标记 `@SpringBootApplication`：
+    - `spring.datasource.driver-class-name/url/username/password`：数据源四项。
+    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：使用Druid连接池。 
+- 开发启动类：`app.OrderApp` 并标记 `@SpringBootApplication` 注解：
     - `SpringApplication.run(OrderApp.class, args)`
 
 # MyBatisPlus工具
@@ -108,20 +106,20 @@
 - MBP依赖与mybatis依赖会冲突，使用时需要将后者注释或删除。
 - MBP依赖与PageHelper依赖会冲突，使用时需要将后者注释或删除。
 - MBP的主配项与mybatis的主配项冲突，使用时需要将后者注释或删除。
-- res: `资源/图片/第3阶-SSM与SSMP整合$SSMP手动配通流程图`
+- res: `资源/图片/MyBatisPlus工具$SSMP配通流程图`
 
 **武技：** 在项目中整合MyBatisPlus工具：
-- 在父项目中添加依赖：
+- 在通用项目中添加依赖：
     - `com.baomidou.mybatis-plus-boot-starter(3.4.1)`：MBP核心依赖。
     - `com.baomidou.mybatis-plus-generator(3.4.1)`：用于MBP生成代码功能。
     - `org.apache.velocity.velocity-engine-core(2.0)`：velocity模板引擎。
-- 主配选配：均以 `mybatis-plus` 为前缀：
+- 分别在3个微服务中选配主配：均以 `mybatis-plus` 为前缀：
+    - `.mapper-locations`：Mapper配置文件位置，注解SQL时可忽略。
+    - `.type-aliases-package`：实体类别名包扫描。
     - `.configuration.map-underscore-to-camel-case=true`：下划线自动转驼峰。
     - `.configuration.cache-enabled=true`：开启二级缓存。
     - `.configuration.lazy-loading-enabled=true`：开启全局懒加载。
     - `.configuration.aggressive-lazy-loading=false`：关闭全局积极加载。
-    - `.mapper-locations`：Mapper配置文件位置，注解SQL时可忽略。
-    - `.type-aliases-package`：实体类别名包扫描。
     - `.configuration.log-impl=o.a.i.l.s.StdOutImpl`：控制台SQL。
 - 在通用微服务中开发工具类 `util.MyBatisPlusUtil`：在D盘生成全部表的对应代码：
     - `new AutoGenerator()`：创建MP生成器实例，调用 `execute()` 可执行生成。
@@ -132,8 +130,8 @@
 - MBP代码分发：
     - 将实体类整包拷贝到通用微服务中以共享到整个微服务架构中。
     - 表 `order` 踩了SQL关键字，手动在Order实体类上添加 @TableName("`order`") 设置别名。
-    - 将生成的Mapper层，Service层和Controller层代码分别拷贝到对应微服务中。
-- 分别在订单，商品和用户微服务的启动类上扫描Mapper接口所在的包：
+    - 将生成的Mapper/Service/Controller层代码和xml配置文件分别拷贝到对应微服务中。
+- 分别在3个微服务的启动类上扫描Mapper接口所在的包：
     - `@MapperScan("com.joezhou.app.mapper")`
 
 ## MBP增删改查
@@ -159,7 +157,7 @@
     - 使用 `new QueryWrapper<>()` 构建条件查询包装器实例，无法使用set方法设置实体类的值。
     - 使用 `new UpdateWrapper<>()` 构建条件修改包装器实例，支持使用set方法设置实体类的值。
     - 使用 `mapper.selectList(queryWrapper)` 发送条件查询语句。
-    - res: `资源\图片\第三阶-SSM与SSMP整合$MP的WapperAPI方法`
+    - res: `资源/图片/MyBatisPlus工具$MBP的WapperAPI方法`
 - 在控制器 `controller.UserController` 中开发两个控制方法：
     - 使用 `@Autowried` 注入业务接口并调用业务方法。
 - cli: `localhost:8010/api/user/select-by-name?name=赵四`

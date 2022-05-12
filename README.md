@@ -432,29 +432,31 @@
 - 在resources下开发 `META-INF/services` 目录（固定）：
     - 在目录中开发 `com.alibaba.csp.sentinel.init.InitFunc` 文件（固定）。
     - 在文件中拷贝持久化配置类全路径 `com.joezhou.app.config.FilePersistenceConfig`。
-- 启动al-user微服务，进入sentinel管控台配置QPS为1的流控降级规则。
-- 重启al-user微服务，流控降级规则依然生效：
-    - 在 `D:/coder/java/sentinel/al-user-rules` 目录可以查看到持久化的规则文件。
+- 启动al-user微服务，对任意资源配置任意降级规则并测试。
+- 重启al-user微服务，等待sentinel从本地恢复规则后再次测试，发现规则依然生效：
+    - 在 `D:/sentinel/al-user-rules` 目录可以查看到持久化的规则文件。
 
 ## 整合OpenFeign
 
-**心法：** sentinel默认无法对远程调用的资源方法进行熔断降级处理，需要额外和OpenFeign进行整合才可以。
+**心法：** sentinel无法直接对远程调用的资源方法进行熔断降级处理，需要额外和OpenFeign进行整合才可以。
 
 **武技：** 将用户微服务中的OpenFeign和sentinel整合并测试熔断降级效果：
-- 添加依赖：
-    - `org.springframework.cloud.spring-cloud-starter-openfeign`
-- 在启动类上标记 `@EnableFeignClients` 以开启OpenFeign功能。
-- 开发商品远程接口 `feign.ProductFeign` 并模拟一个按主键查询商品的接口方法：
-    - 为防止冲突，建议标记 `@Qualifier("productFeign")` 以备精准注入。
+- 在用户微服务中添加依赖：
+    - `org.springframework.cloud.(spring-cloud-starter-openfeign)`
+- 在启动类上标记 `@EnableFeignClients` 以开启用户微服务的OpenFeign功能。
 - 在主配中添加：
     - `feign.sentinel.enabled=true`：配置sentinel和feign的整合。
+- 开发商品远程接口 `feign.ProductFeign`：
+    - 类上标记 `@FeignClient`：并使用 `value` 属性指定远程服务名，使用 `fallback` 属性指定降级类。
+    - 类上标记 `@Qualifier("productFeign")` 以便控制器中可以精准注入，因为降级类是本类的子类，注入时会冲突。
+    - 仿写开发商品微服务的 `selectById()` 方法，方法签名必须一致，参数必须标记 `@RequestParam` 注解。
 - 开发远程接口的降级类 `fallback.ProductFeignFallBack`：
-    - 标记 `@Componet` 以被spring管理。
-    - 实现 `feign.ProductFeign` 远程接口并在重写方法中返回兜底数据。
-- 在远程接口的 `@FeignClient` 中使用 `fallback` 属性指定降级类。
-- 开发控制方法 `controller.SentinelController.openFeign()`：
-    - 使用 `@Autowried + @Qualifier` 精准注入 `ProductFeign` 接口（因为降级类也是ProductFeign的实现类）。
-    - 调用商品远程接口中的接口方法，并将商品数据直接返回到前端。
+    - 必须实现 `feign.ProductFeign` 远程接口，并在重写方法中返回兜底数据。
+    - 类上标记 `@Component` 以被spring管理。
+- 开发控制器 `controller.SentinelController`：
+    - 使用 `@Autowried + @Qualifier` 精准注入 `ProductFeign` 接口。
+- 开发控制方法 `openFeign()`：
+    - 调用商品远程接口中的 `selectById()` 方法，直接响应结果即可。
 - 依次启动Nacos，用户微服务和商品微服务。
 - cli: `localhost:8010/api/sentinel/open-feign?product-id=1`：调用成功：
     - 关闭商品微服务，再次发送请求，远程调用失败，执行兜底数据，表示sentinel成功对远程调用熔断降级。

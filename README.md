@@ -230,12 +230,12 @@
     - 使用 `@Autowired` 注入 `OrderMapper` 接口以调用其添加方法。
     - 使用 `@Autowired` 注入 `ProductFeign` 商品远程接口。
     - 业务方法中调用商品远程接口的查询方法以获取该商品的全部信息，并解析出商品名。
-    - 业务方法中设置订单数据，其中商品名从远程商品数据中获取，购买人姓名可以暂时写死。
+    - 业务方法中将商品名设置到Order实体当中。
     - 业务方法中调用订单服务的本地添加方法完成下单操作。
 - 开发订单控制器 `controller.OrderController`：
     - 使用 `@Autowired` 注入 `OrderService` 业务接口。
     - 开发下单的控制方法，响应JSON字符串。
-- cli: `localhost:8030/api/order/insert?product-id=1`
+- cli: `localhost:8030/api/order/add-order?id=..`
 
 **武技：** 添加订单微服务下单后，在商品微服务中执行扣减库存业务：
 - 在商品微服务中开发业务接口 `service.ProductService`：

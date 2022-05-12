@@ -97,17 +97,9 @@ public class OrderController {
     }
 
     @RequestMapping("add-order")
-    public JsonResult addOrder(@RequestParam("order-id") Integer orderId,
-                         @RequestParam(value = "number", defaultValue = "1") Integer number) {
-        log.info("接收到一个下单请求，请求的订单ID为 {}, 购买数量为 {}", orderId, number);
-        int result = orderService.insert(orderId, number);
-        if (result > 0) {
-            log.info("下单请求执行成功");
-            return JsonResult.ok(1, "下单请求执行成功");
-        } else {
-            log.info("下单请求执行失败");
-            return JsonResult.ok(0, "下单请求执行失败");
-        }
+    public JsonResult addOrder(Order order) {
+        log.info("接收到一个下单请求，请求参数为 {}", order);
+        return orderService.addOrder(order) > 0 ? JsonResult.ok() : JsonResult.fail();
     }
 
 

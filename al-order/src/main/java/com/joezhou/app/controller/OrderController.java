@@ -96,7 +96,7 @@ public class OrderController {
         return orderService.save(order) ? JsonResult.ok() : JsonResult.fail();
     }
 
-    @RequestMapping("/add-order")
+    @RequestMapping("add-order")
     public JsonResult addOrder(@RequestParam("order-id") Integer orderId,
                          @RequestParam(value = "number", defaultValue = "1") Integer number) {
         log.info("接收到一个下单请求，请求的订单ID为 {}, 购买数量为 {}", orderId, number);

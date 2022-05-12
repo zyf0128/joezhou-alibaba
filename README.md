@@ -225,7 +225,7 @@
     - 返回值/方法名/形参都必须和远程服务对应的控制方法保持一致，且形参必须标记 `@RequestParam`。
     - 方法上标记 `@RequestMapping("/api..")` 并指定远程服务对应的控制方法的完整URL。
 - 开发订单业务接口 `service.OrderService`：开发下单方法：
-    - `int insert(Order order)`：成功返回1，失败返回0。
+    - `int addOrder(Order order)`：成功返回1，失败返回0。
 - 开发订单业务接口实现类 `service.impl.OrderServiceImpl`：
     - 使用 `@Autowired` 注入 `OrderMapper` 接口以调用其添加方法。
     - 使用 `@Autowired` 注入 `ProductFeign` 商品远程接口。

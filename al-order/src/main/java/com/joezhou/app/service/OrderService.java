@@ -16,9 +16,8 @@ public interface OrderService extends IService<Order> {
     /**
      * 添加一个订单
      *
-     * @param productId 商品ID
-     * @param number    购买数量
+     * @param order 订单实体
      * @return 正数表示成功，零或负数表示失败
      */
-    int insert(Integer productId, Integer number);
+    int addOrder(Order order);
 }

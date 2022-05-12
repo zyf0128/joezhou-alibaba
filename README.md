@@ -573,9 +573,9 @@
 - `filters`：设置过滤器，即转发前的一些修改，其值是一个数组：
     - `StripPrefix=1`：转发之前去掉端口之后的1层路径，即服务名。
 - cli: 按照 `API网关地址:API网关端口/路由配置的Path值/URL接口` 的格式测试API网关：
-    - `localhost:8000/user-service/api/user/select-by-id?id=1`
-    - `localhost:8000/order-service/api/order/select-by-id?id=1`
-    - `localhost:8000/product-service/api/product/select-by-id?id=1`
+    - `localhost:8000/user-server/api/user/select-by-id?id=1`
+    - `localhost:8000/order-server/api/order/select-by-id?id=1`
+    - `localhost:8000/product-server/api/product/select-by-id?id=1`
 
 ## 配置断言
 

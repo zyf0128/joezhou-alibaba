@@ -17,7 +17,7 @@ spring:
           uri: lb://al-user # 路由真实地址，`lb://` 表示负载均衡
           order: 1 # 路由优先级，数值越小优先级越高
           predicates:
-            - Path=/user-service/** # 请求满足此格式时，断言配置才能生效
+            - Path=/user-server/** # 请求满足此格式时，断言配置才能生效
             - Before=2023-05-05T00:00:00.000+08:00 # 请求必须在该日期之前发起
             - After=2020-05-05T00:00:00.000+08:00 # 请求必须在该日期之后发起
             - Method=GET # 请求必须是GET类型
@@ -34,14 +34,14 @@ spring:
           uri: lb://al-product
           order: 1
           predicates:
-            - Path=/product-service/**
+            - Path=/product-server/**
           filters:
             - StripPrefix=1
         - id: order-route # 订单微服务路由ID
           uri: lb://al-order
           order: 1
           predicates:
-            - Path=/order-service/**
+            - Path=/order-server/**
           filters:
             - StripPrefix=1
   zipkin:

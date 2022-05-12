@@ -22,7 +22,7 @@
 ## 开发父项目
 
 **武技：** 开发maven-jar父项目 `joezhou-alibaba`：
-- 检查maven配置是否正确。
+- 检查项目的maven配置和编码是否正确。
 - 父项目不用于开发，可以直接删除掉src目录。
 - 生成数据库实例，用户，表和测试数据：
     - `资源/SQL/alibaba.sql`
@@ -41,21 +41,18 @@
 
 **武技：** 在父项目中开发maven-jar通用服务 `al-common`：
 - 查看父项目中的 `<modules>` 中是否添加了 `al-common` 子模块。
-- 添加依赖：
+- 开发工具类 `util.JsonResult` 用于统一响应数据格式。
+- 添加依赖：不要在父项目中添加依赖，因为后续的网关等服务不需要引入这些依赖：
     - `org.projectlombok.lombok`
     - `org.springframework.boot.spring-boot-starter-test`
     - `com.baomidou.mybatis-plus-boot-starter(3.4.1)`
     - `com.baomidou.mybatis-plus-generator(3.4.1)`
     - `org.apache.velocity.velocity-engine-core(2.3)`
     - `mysql.mysql-connector-java(runtime)`
+    - `com.alibaba.druid(1.1.6)`
     - `com.fasterxml.jackson.core.jackson-core(2.9.7)`
     - `com.fasterxml.jackson.core.ackson-annotations(2.9.7)`
     - `com.fasterxml.jackson.core.jackson-databind(2.9.7)`
-- 开发工具类 `util.JacksonUtil` 用于创建JSON格式的字符串数据。
-- 开发工具类 `util.MyBatisPlusUtil`：用于生成MBP代码：
-    - 根据数据库表生成三张表的entity层/Mapper层/Service层/Controller层代码和xml配置文件，建议放在D盘。
-    - 将生成的 `entity` 目录整包拷贝到 `al-common` 微服务中以共享到整个微服务架构中。
-    - 表 `order` 踩了SQL关键字，手动在Order实体类上添加 @TableName("`order`") 设置别名。
 
 ## 开发用户微服务
 
@@ -69,14 +66,9 @@
     - `server.port=8010`：端口。
     - `spring.application.name=al-user`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
-    - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
+    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：连接池。 
 - 开发启动类 `app.UserApp`：标记 `@SpringBootApplication`：
     - `SpringApplication.run(UserApp.class, args)`
-- 启动类使用 `@MapperScan("com.joezhou.app.mapper")` 扫描Mapper接口所在的包。
-- 控制器中开发控制方法：
-    - 使用 `@Autowired` 注入业务层接口。
-    - 开发按主键查询一条数据的控制方法，响应JSON字符串。
-- cli: `localhost:8010/api/user/select-by-id?id=1`
 
 ## 开发商品微服务
 
@@ -90,14 +82,9 @@
     - `server.port=8020`：端口。
     - `spring.application.name=al-product`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
-    - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
+    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：连接池。 
 - 开发启动类：`app.ProductApp` 并标记 `@SpringBootApplication`：
     - `SpringApplication.run(ProductApp.class, args)`
-- 启动类使用 `@MapperScan()` 扫描Mapper接口。
-- 控制器中开发控制方法：
-    - 使用 `@Autowired` 注入Service层接口。
-    - 开发按主键查询一条数据的控制方法，响应JSON字符串。
-- cli: `localhost:8020/api/product/select-by-id?id=1`
 
 ## 开发订单微服务
 
@@ -111,14 +98,94 @@
     - `server.port=8030`：端口。
     - `spring.application.name=al-order`：微服务名。
     - `spring.datasource.driver-class-name/url/username/password`：数据源。
-    - `mybatis-plus.mapper-locations/type-aliases-package/configuration.log-impl`：控制台打印SQL。
+    - `spring.datasource.type=com.alibaba.druid.pool.DruidDataSource`：连接池。 
 - 开发启动类：`app.OrderApp` 并标记 `@SpringBootApplication`：
     - `SpringApplication.run(OrderApp.class, args)`
-- 启动类使用 `@MapperScan()` 扫描Mapper接口。
-- 控制器中开发控制方法：
-    - 使用 `@Autowired` 注入Service层接口。
-    - 开发按主键查询一条数据的控制方法，响应JSON字符串。
-- cli: `localhost:8030/api/order/select-by-id?id=1`
+
+# MyBatisPlus工具
+
+**心法：** [MyBatisPlus](https://mp.baomidou.com/) 是一个MyBatis的增强工具，在MyBatis的基础上只做增强不做改变，为简化开发、提高效率而生，可以代替MyBatis框架组成新的SSMP整合框架：
+- MBP依赖与mybatis依赖会冲突，使用时需要将后者注释或删除。
+- MBP依赖与PageHelper依赖会冲突，使用时需要将后者注释或删除。
+- MBP的主配项与mybatis的主配项冲突，使用时需要将后者注释或删除。
+- res: `资源/图片/第3阶-SSM与SSMP整合$SSMP手动配通流程图`
+
+**武技：** 在项目中整合MyBatisPlus工具：
+- 在父项目中添加依赖：
+    - `com.baomidou.mybatis-plus-boot-starter(3.4.1)`：MBP核心依赖。
+    - `com.baomidou.mybatis-plus-generator(3.4.1)`：用于MBP生成代码功能。
+    - `org.apache.velocity.velocity-engine-core(2.0)`：velocity模板引擎。
+- 主配选配：均以 `mybatis-plus` 为前缀：
+    - `.configuration.map-underscore-to-camel-case=true`：下划线自动转驼峰。
+    - `.configuration.cache-enabled=true`：开启二级缓存。
+    - `.configuration.lazy-loading-enabled=true`：开启全局懒加载。
+    - `.configuration.aggressive-lazy-loading=false`：关闭全局积极加载。
+    - `.mapper-locations`：Mapper配置文件位置，注解SQL时可忽略。
+    - `.type-aliases-package`：实体类别名包扫描。
+    - `.configuration.log-impl=o.a.i.l.s.StdOutImpl`：控制台SQL。
+- 在通用微服务中开发工具类 `util.MyBatisPlusUtil`：在D盘生成全部表的对应代码：
+    - `new AutoGenerator()`：创建MP生成器实例，调用 `execute()` 可执行生成。
+    - `new GlobalConfig()`：创建并设置MP全局配置。
+    - `new DataSourceConfig()`：创建并设置MP数据源。
+    - `new PackageConfig()`：创建并设置MP的java包配置。
+    - `new StrategyConfig()`：创建并设置MP的ORM映射策略。
+- MBP代码分发：
+    - 将实体类整包拷贝到通用微服务中以共享到整个微服务架构中。
+    - 表 `order` 踩了SQL关键字，手动在Order实体类上添加 @TableName("`order`") 设置别名。
+    - 将生成的Mapper层，Service层和Controller层代码分别拷贝到对应微服务中。
+- 分别在订单，商品和用户微服务的启动类上扫描Mapper接口所在的包：
+    - `@MapperScan("com.joezhou.app.mapper")`
+
+## MBP增删改查
+
+**武技：** 分别在3个微服务中测试MBP的基本CRUD操作，以用户微服务为例：
+- 在控制器 `controller.UserController` 中：
+    - 使用 `@Autowried` 注入业务接口 `userService` 并开发CRUD控制方法。
+    - 使用 `service.save(entity)` 添加一条记录。
+    - 使用 `service.getById(id)` 按主键查询一条记录。
+    - 使用 `service.updateById(entity)` 按主键修改一条记录。
+    - 使用 `service.removeById(id)` 按主键删除一条记录。
+    - 使用 `service.list()` 全查记录。
+- cli: `localhost:8010/api/user/select-by-id?id=1`
+
+## MBP条件操作
+
+**武技：** 分别在3个微服务中测试MBP的条件操作，以用户微服务为例：
+- 在业务接口 `service.UserService` 中开发两个业务方法：
+    - 开发 `List<User> testQueryWrapper()` 以测试MBP的条件查询。
+    - 开发 `void testUpdateWrapper()` 以测试MBP的条件修改。
+- 在业务类 `service.impl.UserService` 中重写两个业务方法：
+    - 使用 `@Autowried` 注入Mapper接口：需提前手动在Mapper接口上标记 `@Repository`。
+    - 使用 `new QueryWrapper<>()` 构建条件查询包装器实例，无法使用set方法设置实体类的值。
+    - 使用 `new UpdateWrapper<>()` 构建条件修改包装器实例，支持使用set方法设置实体类的值。
+    - 使用 `mapper.selectList(queryWrapper)` 发送条件查询语句。
+    - res: `资源\图片\第三阶-SSM与SSMP整合$MP的WapperAPI方法`
+- 在控制器 `controller.UserController` 中开发两个控制方法：
+    - 使用 `@Autowried` 注入业务接口并调用业务方法。
+- cli: `localhost:8010/api/user/select-by-name?name=赵四`
+
+## MBP分页查询
+
+**武技：** 分别在3个微服务中测试MBP的分页查询，以用户微服务为例：
+- 开发MP分页配置类 `config.MpPagingConfig`：
+    - 标记 `@Configuration` 以声明为配置类。
+    - 使用 `@Bean` 管理 `c.b.m.e.p.MybatisPlusInterceptor` 类。
+    - 使用 `new MybatisPlusInterceptor()` 创建MP拦截器实例。
+    - 使用 `new PaginationInnerInterceptor(DbType.MYSQL)` 创建MySQL分页内置拦截器实例。
+    - 使用 `interceptor.addInnerInterceptor(内置拦截器实例)` 对MP拦截器添加指定内置拦截器实例。
+- 在业务接口 `service.UserService` 中开发分页的业务方法：
+    - `Page<SnakeInfo> paging(long current, long size)`
+- 在业务类 `service.impl.UserServiceImpl` 中重写分页的业务方法：
+    - `new Page<>()`：构建一个分页实例，参数为当前第几页和每页显示多少条。
+    - `mapper.selectPage()`：调用分页方法，参数为分页实例和queryWrapper实例。
+    - `page.getCurrent()`：返回当前是第几页。
+    - `page.getSize()`：返回每页显示多少条。
+    - `page.getTotal()`：返回一共有多少条。
+    - `page.getPages()`：返回一共有多少页。
+    - `page.getRecords()`：返回分页数据。
+    - `page.hasNext()`：返回是否存在下一页。
+    - `page.hasPrevious()`：返回是否存在上一页。
+- 在控制器 `controller.UserController` 中开发分页控制方法并测试。
 
 # 注册中心Nacos
 
@@ -461,38 +528,6 @@
 - cli: `localhost:8010/api/sentinel/open-feign?product-id=1`：调用成功：
     - 关闭商品微服务，再次发送请求，远程调用失败，执行兜底数据，表示sentinel成功对远程调用熔断降级。
 
-# RMQ消息队列
-
-**武技：** 订单微服务下单成功后，向broker中的order:sms投递消息：
-- 添加依赖：
-    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
-- 添加主配：
-    - `rocketmq.name-server=localhost:9876`：RMQ的NameServer的地址。
-    - `rocketmq.producer.group=order-producer-group`：配置生产者组名。
-- 开发业务类 `service.impl.OrderServiceImpl`：
-    - 使用 `@Autowired` 直接在订单业务类中注入 `o.a.r.s.c.RocketMQTemplate` 类。
-- 开发业务方法 `insert()`：
-    - `rmqTemplate.convertAndSend("order:sms", order)`：下单成功后，同步向broker指定主题标签投递order实体。
-- cli: `localhost:8000/order-service/api/order/insert?product-id=1`：
-    - 观察rmq管控台，查看是否存在订单微服务投递的消息。
-
-**武技：** 用户微服务消费broker中的order:sms消息：
-- 添加依赖：
-    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
-- 添加主配：
-    - `rocketmq.name-server=localhost:9876`：RMQ的NameServer的地址。
-- 开发消息监听类 `listener.OrderSmsListener`：用于接收RMQ的Broker投递的消息：
-    - 标记 `@Component` 以加入spring管理。
-    - 实现 `o.a.r.s.c.RocketMQListener<Order>`，类泛型为具体消息的类型。
-    - 重写 `onMessage()`：该方法在Broker投递消息时触发并执行。
-- 为消息监听类标记 `@RocketMQMessageListener()` 以声明为一个RMQ消费监听类：
-    - `consumerGroup = "user-consumer-group"`：消费者组名。
-    - `topic = "order"`：只消费order主题的消息。
-    - `selectorExpression = "sms"`：只消费sms标签的消息，默认为 `*`。
-    - `consumeMode = ConsumeMode.CONCURRENTLY`：默认CONCURRENTLY同步发送消息，可设置为ORDERLY顺序发送消息。
-    - `messageModel = MessageModel.CLUSTERING`：默认CLUSTERING集群发送消息，可设置为BROADCASTING广播消息。
-- 启动用户微服务，查看日志是否消费了order:sms中的消息。
-
 # API网关Gateway
 
 **心法：** API网关是所有请求的公共入口，为客户端提供统一服务，可实现一些与业务本身无关的公共逻辑，如认证，鉴权，监控，路由转发等：
@@ -512,13 +547,13 @@
     - `org.projectlombok.lombok`
     - `org.springframework.cloud.spring-cloud-starter-gateway`
     - `com.alibaba.cloud.spring-cloud-starter-alibaba-nacos-discovery`
-- 开发启动类 `ApiGatewayApp`：
+- 开发启动类 `GatewayApp`：
     - 标记 `@EnableDiscoveryClient` 以将自己注册到nacos中心。
 - 主配添加：
     - `server.port=8000`：设置API网关的端口。
     - `spring.application.name=api-gateway`：设置微服务名。
     - `spring.cloud.nacos.discovery.server-addr=localhost:8848`：将自己注册到nacos中心。
-    - `spring.cloud.gateway.discovery.locator.enabled=true`：让gateway可以发现nacos中的服务。
+    - `spring.cloud.gateway.discovery.locator.enabled=true`：允许发现nacos中的其它服务。
 - 依次启动nacos，三个微服务和API网关。
 - cli: 按照 `API网关地址:API网关端口/微服务名/URL接口` 的格式测试API网关：
     - `localhost:8000/al-product/api/product/select-by-id?id=1`
@@ -529,9 +564,9 @@
 
 **心法：** 路由route是gateway中最基本的组件之一，用于当请求满足指定条件时将其转发到指定微服务。
 
-**武技：** 对网关服务进行路由详细配置：
+**武技：** 在网关微服务中，对3个微服务进行路由详细配置：
 - 主配中使用 `spring.cloud.gateway.routes` 对路由进行配置，其值是一个数组：
-    - yml数组类型的每个值，都需要在使用 `- ` 作为前缀。
+    - yml数组类型的每组值，都需要在使用 `- ` 作为前缀。
 - `id=user-route`：配置路由唯一标识，名称随意，不重复即可。
 - `uri=lb://al-user`：从nacos中获取指定微服务的IP和端口，`lb://` 表示负载均衡。
 - `order=1`：设置路由优先级，数字越小级别越高。
@@ -803,6 +838,183 @@
     - `spring.cloud.nacos.config.shared-dataids: service-comm.yaml`：配置跨服务共享配置文件名。
     - `spring.cloud.nacos.config.refreshable-dataids: service-comm.yaml`：配置动态刷新跨服务共享配置文件。
 - 重启用户微服务，正常启动说明跨环境共享配置成功。
+
+# RMQ消息队列
+
+**心法：** MessageQueue消息队列，简称MQ，即存放消息的FIFO队列，主要用于对进程/线程间通信进行解耦，对高并发任务进行削峰填谷，提高程序性能：
+- JMS规范：`Java Message Service`，简称JMS，是一个Java平台中关于面向消息中间件的api，用于在两个应用程序之间，或分布式系统中发送消息，进行异步通信。
+- MQ使用原则：尽可能提高消息入队速度，灵活调整消息出队速度。
+- MQ技术特点：
+    - 消息不丢失：MQ采取put-get-delete模式，仅在消息被完整处理后才会将其删除。
+    - 进程无关联：MQ下游进程崩溃，上游进程仍可继续put，等待下游恢复。
+    - 处理不重复：MQ中的一个消息仅被处理一次，被某个下游进程获取时会锁定。
+    - 处理可延时：MQ中的消息可以被延时处理，更加灵活。
+
+**心法：** [RocketMQ](http://rocketmq.apache.org/) 是阿里巴巴开源的一款高性能，高吞吐量的分布式MQ，源于jms规范但不遵守jms规范：
+- NameSrv：邮局，用于管理Broker，生产者和消费者都需要通过它来寻找发现Broker。
+- Broker：快递员，用于接收，存储和投递消息，需要提前向NameSrv中注册自己，一个broker中包含多个Topic。
+- Topic：地区，用来区分不同类型的消息，发送和接收消息之前都需要先创建Topic，一个Topic中包含1或N个MQ。
+- Tag：更详细的地区，Topic中可以按照Tag进行更详细的分类。
+- MessageQueue：邮件，用于提高吞吐量，支持并行地向多个MQ发送消息，也支持并行的从多个MQ中获取消息。
+- Message：快递本身，用于存放具体消息的对象。
+- Producer：寄件人，即消息生产者，需要从NameSrv中获取Broker，然后生产消息并投递给Broker。
+- Consumer：收件人，即消息接收者，需要从NameSrv中获取Broker，然后从Broker中消费消息。
+- ProducerGroup：生产者组，多个发送同一消息的生产者统称为一个生产者组。
+- ConsumerGroup：消费者组，多个消费同一消息的消费者统称为一个消费者组。
+- res：`资源/图片/第1阶-MessageQueue.jpg$RMQ结构图`
+
+## RMQ环境搭建
+
+**武技：** 搭建RocketMQ环境，需要提前安装JDK8版本的JDK：
+- 安装RMQ服务端：
+    - res: `rocketmq-all-4.9.0-bin-release.zip`：解压缩即可。
+    - 配置环境变量 `ROCKETMQ_HOME` 和 `path`。
+- 在RMQ家目录的 `bin` 目录中启动 `namesrv.cmd` 邮局服务：
+    - cmd：`mqnamesrv.cmd -n localhost:9876`：端口默认9876。
+- 在RMQ家目录的 `bin` 目录中启动 `broker.cmd` 快递员服务：
+    - cmd：`mqbroker.cmd -n localhost:9876 autoCreateTopicEnable=true`：自动创建topic和tag。
+- RMQ管控台是一个springboot项目：
+    - res: `rocketmq-console.zip`：解压缩即可。
+- 修改RMQ管控台项目的主配 `/src/main/resources/application.properties`：
+    - `server.port=12581`：RMQ管控台端口，默认8080，容易冲突，建议修改。
+    - `rocketmq.config.namesrvAddrs=localhost:9876`：NameSrv地址，默认 `localhost:9876`。
+- 将RMQ管控台项目打包，然后启动，最后使用浏览器访问：
+    - cmd：`cd D:\rocketmq\rocketmq-console`：项目打包操作需要在项目的根目录进行。
+    - cmd：`mvn clean package -Dmaven.test.skip=true`：打包RMQ管控台项目。
+    - cmd：`cd target`：RMQ管控台项目的jar包在target目录下生成。
+    - cmd：`java -jar rocketmq-console-ng-1.0.0.jar`：启动RMQ管控台项目。
+    - cli：`localhost:12581`：第一次访问会有点慢，耐心等待。
+- 设计bat启动：bat文件可以双击启动：
+    - 创建 `namesrv-9876.bat`：编写namesrv服务的启动命令，注意要添加命令所在的绝对路径。
+    - 创建 `broker.bat`：编写broker服务的启动命令，注意要添加命令所在的绝对路径。
+    - 创建 `console-12581.bat`：编写 `D:`，`cd ..` 和 `java -jar ..` 3条命令，注意两条命令不要使用分号分隔。
+
+## RMQ生产消费模型
+
+**心法：** 生产者生产消息并投递给broker中的指定队列，消费者轮流获取并消费该消息：
+- 生产者 `Producer`：向broker中的指定队列投递消息。
+- 消费者 `Consumer`：监听broker中的指定队列，一旦生产者向该队列投递了消息，就立刻触发消费动作。
+- 测试准备：创建springboot项目 `rocketmq`，并添加依赖：
+    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
+
+**武技：** 使用junit模拟生产者生产消息到broker中：
+- 创建生产者实例，并纳入指定的生产者组中，生产者组自动创建：
+    - `new DefaultMQProducer("test-producer-group")`
+- 为生产者指定RMQ服务地址并启动：
+    - `producer.setNamesrvAddr("localhost:9876")`：集群以分号分隔。
+    - `producer.start()`：启动生产者。
+- 创建一个消息实例：
+    - `new Message("主题", "标签", "消息".getBytes(StandardCharsets.UTF_8))`
+- 生产者将消息同步发送到broker中：
+    - `producer.send(消息实例, 超时毫秒数)`：返回一个SendResult实例。
+- 从SendResult实例中获取消息ID和发送状态：
+    - `sendResult.getMsgId()`：每个消息都拥有一个唯一标识ID。
+    - `sendResult.getSendStatus()`：发送成功会返回 `SEND_OK` 结果。
+- tst：`rmq.ProducerTest.testProducer()`：
+    - 在管控台查看是否已经接收到了生产者生产的消息。
+
+**武技：** 使用junit模拟2个消费者轮流消费broker中的消息：
+- 创建消费者实例，并纳入指定的消费者组中，消费者组自动创建：
+    - `new DefaultMQPushConsumer("test-consumer-group")`
+- 为消费者指定RMQ服务地址：
+    - `consumer.setNamesrvAddr("localhost:9876")`：集群以分号分隔。
+- 为消费者订阅主题和标签：
+    - `consumer.subscribe("主题", "标签")`：多标签用 `||` 分隔，`*` 表示订阅所有标签。
+- 为消费者设置监听：参数可直接使用Lambda表达式：
+    - `consumer.registerMessageListener((MessageListenerConcurrently)(msgs, context)->{})`
+    - param1：`List<MessageExt>` 类型的消息列表。
+    - param2：`ConsumeConcurrentlyContext` 类型的上下文环境对象。
+    - return：`ConsumeConcurrentlyStatus.RECONSUME_LATER`：表示稍后再试。
+    - return：`ConsumeConcurrentlyStatus.CONSUME_SUCCESS`：表示稍后再试。
+    - 无论返回什么，都需要强转为 `MessageListenerConcurrently` 类型。
+- 在监听中获取消息体：
+    - `new String(messageExt.getBody())`：获取 `byte[]` 类型的消息体内容，并转为字符串形式。
+- 启动消费者实例：
+    - `consumer.start()`
+- tst：`rmq.ConsumerATest/ConsumerBTest`：
+    - 消费者需要一只保持监听状态，所以需要使用main方法进行测试。
+
+## RMQ客户端模板
+
+**武技：** 使用 `o.a.r.s.c.RocketMQTemplate` 作为RMQ的java客户端，测试生产消费模型：
+- 添加依赖：
+    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
+- 主配添加：
+    - `rocketmq.name-server=localhost:9876`：RMQ的NameServer的地址。
+    - `rocketmq.producer.group=test-producer-group`：配置生产者组名。
+- 开发监听类 `listener.RmqListener`：用于接收RMQ的Broker投递的消息：
+    - 标记 `@Component` 以加入spring管理。
+    - 实现 `o.a.r.s.c.RocketMQListener<String>`，类泛型为具体消息的类型。
+    - 重写 `onMessage()`：该方法在Broker投递消息时触发并执行。
+- 为监听类标记 `@RocketMQMessageListener()` 以声明为一个RMQ消费监听类：
+    - `consumerGroup="test-consumer-group"`：消费者组名。
+    - `topic="test-topic"`：监听来自 `test-topic` 主题的消息。
+    - `selectorExpression="*"`：监听来自所有标签的消息，默认为 `*`。
+    - `consumeMode=ConsumeMode.CONCURRENTLY`：同组的消费者并发接收消息，默认值。
+    - `consumeMode=ConsumeMode.ORDERLY`：同组的消费者按顺序接收消息。
+    - `messageModel=MessageModel.CLUSTERING`：同组的消费者平均分摊消费该消息，默认值。
+    - `messageModel=MessageModel.BROADCASTING`：同组的消费者全部消费该消息。
+- 开发测试类：模拟生产者向broker发送消息：
+    - 标记 `@RunWith(SpringRunner.class)`：指定启动方式。
+    - 标记 `@SpringBootTest(classes = RocketMqApp.class)`：指定启动类。
+    - 使用 `@Autowired` 注入RocketMQTemplate类。
+    - 调用 `rocketMQTemplate.convertAndSend("test-topic:test-tag", "hello2")` 同步发送消息。
+    - tst：`rmq.RocketMqTemplateTest.testConvertAndSend()`
+
+## RMQ消息类型
+
+**心法：** RMQ的消息分为普通消息和顺序消息两种：
+- 普通消息：
+    - 同步发送：发送方发出数据后，会在收到响应后才发下一个消息，用于重要通知邮件，报名短信，营销短息等。
+    - 异步发送：发送方发出数据后，无需等待响应，直接发送下个消息，用于链路耗时长，对RT时间敏感的业务。
+    - 单项发送：发送方只负责发送消息，不需要接收响应，适用于耗时短，不是特别重要的业务，速度最快。
+- 顺序消息：一种严格按照顺序来发布和消费的消息类型：
+    - 针对API的最后一个字符串参数进行hash取余，以决定该消息落入哪个MessageQueue中。
+
+**武技：** 使用RocketMQTemplate测试三种普通消息和一种顺序消息：
+- 开发测试方法 `testSyncSend()`，测试同步发送消息：
+    - `rmqTemplate.syncSend("主题:标签", "消息", 超时时间)`
+- 开发测试方法 `testAsyncSend()`，测试异步发送消息：
+    - `rmqTemplate.asyncSend("主题:标签", "消息", new SendCallback())`
+    - 当消息发送成功时触发回调函数中的 `onSuccess()`。
+    - 当消息发送异常时触发回调函数中的 `onException()`。
+- 开发测试方法 `testSendOneWay()`，测试单项发送消息：
+    - `rmqTemplate.sendOneWay("主题:标签", "消息")`
+- 开发测试方法 `testSendOneWayOrderly()`，测试顺序发送消息：
+    - `rmqTemplate.sendOneWayOrderly("主题:标签", "消息", "xx")`：最后一个参数随意起名。
+- tst：`rmq.MessageTypeTest`
+
+**武技：** 订单微服务下单成功后，向broker中的order:sms投递消息：
+- 添加依赖：
+    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
+- 添加主配：
+    - `rocketmq.name-server=localhost:9876`：RMQ的NameServer的地址。
+    - `rocketmq.producer.group=order-producer-group`：配置生产者组名。
+- 开发业务类 `service.impl.OrderServiceImpl`：
+    - 使用 `@Autowired` 直接在订单业务类中注入 `o.a.r.s.c.RocketMQTemplate` 类。
+- 开发业务方法 `insert()`：
+    - `rmqTemplate.convertAndSend("order:sms", order)`：下单成功后，同步向broker指定主题标签投递order实体。
+- cli: `localhost:8000/order-service/api/order/insert?product-id=1`：
+    - 观察rmq管控台，查看是否存在订单微服务投递的消息。
+
+## RMQ实战演练
+
+**武技：** 用户微服务消费broker中的order:sms消息：
+- 添加依赖：
+    - `org.apache.rocketmq.rocketmq-spring-boot-starter(2.0.3)`
+- 添加主配：
+    - `rocketmq.name-server=localhost:9876`：RMQ的NameServer的地址。
+- 开发消息监听类 `listener.OrderSmsListener`：用于接收RMQ的Broker投递的消息：
+    - 标记 `@Component` 以加入spring管理。
+    - 实现 `o.a.r.s.c.RocketMQListener<Order>`，类泛型为具体消息的类型。
+    - 重写 `onMessage()`：该方法在Broker投递消息时触发并执行。
+- 为消息监听类标记 `@RocketMQMessageListener()` 以声明为一个RMQ消费监听类：
+    - `consumerGroup = "user-consumer-group"`：消费者组名。
+    - `topic = "order"`：只消费order主题的消息。
+    - `selectorExpression = "sms"`：只消费sms标签的消息，默认为 `*`。
+    - `consumeMode = ConsumeMode.CONCURRENTLY`：默认CONCURRENTLY同步发送消息，可设置为ORDERLY顺序发送消息。
+    - `messageModel = MessageModel.CLUSTERING`：默认CLUSTERING集群发送消息，可设置为BROADCASTING广播消息。
+- 启动用户微服务，查看日志是否消费了order:sms中的消息。
 
 # 分布式事务Seata
 

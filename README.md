@@ -569,7 +569,7 @@
 - `uri=lb://al-user`：从nacos中获取指定微服务的IP和端口，`lb://` 表示负载均衡。
 - `order=1`：设置路由优先级，数字越小级别越高。
 - `predicates`：设置断言，即转发前的条件判断，其值是一个数组：
-    - `Path=/user-service/**`：URL请求满足此格式时，断言配置才能生效。
+    - `Path=/user-server/**`：URL请求满足此格式时，断言配置才能生效。
 - `filters`：设置过滤器，即转发前的一些修改，其值是一个数组：
     - `StripPrefix=1`：转发之前去掉端口之后的1层路径，即服务名。
 - cli: 按照 `API网关地址:API网关端口/路由配置的Path值/URL接口` 的格式测试API网关：
@@ -580,7 +580,7 @@
 ## 配置断言
 
 **心法：** Predicate断言用于隔离非法请求，只有断言项全部返回真才会放行请求：
-- `- Path=/product-service/**`：URL请求满足此格式时，断言配置才能生效。
+- `- Path=/product-server/**`：URL请求满足此格式时，断言配置才能生效。
 - `- After=2020-05-05T00:00:00.000+08:00`：请求时间必须在指定的时间之后。
 - `- Before=2020-05-05T00:00:00.000+08:00`：请求时间必须在指定的时间之前。
 - `- Between=T1,T2`：请求时间必须在两个指定时间之间，T1和T2都是同上的格式。
@@ -588,32 +588,37 @@
 - `- Header=X-Request-Id, \d+`：请求头中必须得有X-Request-Id，且值必须满足指定正则表达式。
 - `- Method=GET`：请求必须是GET类型。
 - `- Query=a, \d+`：请求参数必须携带a，且值必须满足指定正则表达式。
-    
+- cli: `localhost:8000/user-server/api/user/select-by-id`：
+    - `?id=1`：未携带指定查询串，阻止请求。
+    - `?id=1&a=1`：携带了指定查询串，放行请求。
+
 **武技：** 开发自定义断言，设置请求若携带了age参数，则其值必须在16到60之间：
 - 开发自定义断言工厂类 `predicate.AgeRoutePredicateFactory`：
     - 标记 `@Component` 以加入spring容器。
     - 名字必须是 `自定义断言配置的key值 + RoutePredicateFactory` 的格式。
     - 必须继承 `o.s.c.g.h.p.AbstractRoutePredicateFactory<外部类.内部配置类>` 类。
-- 在自定义断言类中开发内部配置类，用于接收和存储主配中的Age值：
-    - `static class Config{}`：埋minAge和maxAge两个属性并生成setter/getter。
-- 重写无参构造并使用 `super(Config.class)` 将内部配置类传递给父类。
-- 重写 `shortcutFieldOrder()`：读取主配中Age值并对位赋值给Config配置类的属性：
-    - `return Arrays.asList("minAge", "maxAge")`：第一个值赋给minAge，第二个值赋给maxAge。
-- 重写 `apply()`：配置断言逻辑，内部直接使用 `return serverWebExchange -> {}` 返回断言结果：
-    - `serverWebExchange.getRequest().getQueryParams().getFirst("age")`：获取指定请求参数。
+- 在自定义断言类中开发静态内部类，该类用于接收和存储主配断言配置中的 `Age` 值：
+    - `static class Config{}`：埋minAge和maxAge两个Integer属性并生成setter/getter。
+- 重写无参构造并使用 `super(Config.class)` 将内部配置类传递给父类进行处理。
+- 重写 `shortcutFieldOrder()`：用于读取主配断言配置中Age的两个值：
+    - `return Arrays.asList("minAge", "maxAge")`：对位赋值给Config类的两个属性。
+- 重写 `apply()`：配置断言逻辑：
+    - `return serverWebExchange -> {}`：函数式接口 `Predicate` 可以直接使用lambda表达式返回。
+    - `serverWebExchange.getRequest().getQueryParams().getFirst("age")`：获取首个指定请求参数。
     - `return false/true`: 阻止请求/放行请求。
 - 主配添加：
     - `spring.cloud.gateway.routes[0].predicates[0].Age=16,60`
-- cli: `localhost:8000/user-service/api/user/select-by-id`：
-    - `?id=1`：没有传递age参数，放行。
-    - `?id=1&age=999`：age不满足合理范围，阻止。
-    - `?id=1&age=50`：age在合理范围内，放行。
+- cli: `localhost:8000/user-server/api/user/select-by-id`：
+    - `?id=1`：没有传递age参数，放行请求。
+    - `?id=1&age=999`：age不满足合理范围，阻止请求。
+    - `?id=1&age=50`：age在合理范围内，放行请求。
 
 ## 配置过滤器
 
-**心法：** 当断言全部成功后，会将请求放行到API网关的过滤器链中，在请求被路由前后执行一些业务代码：
-- 局部过滤器GatewayFilter：仅作用在某一个或某一组路由上。
-- 全局过滤器GlobalFilter：作用所有路由上。
+**心法：** 当断言全部成功后，会将请求放行到API网关的过滤器链中，在请求被路由前后进行二次操作：
+- 过滤器分类：
+    - 局部过滤器GatewayFilter：仅作用在某一个或某一组路由上。
+    - 全局过滤器GlobalFilter：作用所有路由上。
 - 内置过滤器配置：
     - `StripPrefix=1`：从端口之后，删除1层原请求的路径，一般用于去掉项目名。
     - `AddRequestHeader=a,1`：为原请求添加Header键值对a=1。
@@ -624,7 +629,7 @@
     - `SetResponseHeader=g,4`：修改原响应Header中g的值为4。
     - `RequestSize=10`：设置请求包大小，超过10字节时返回413错误，默认5M。
     - `SetStatus=2000`：修改原始响应的状态码。
-- cli: `localhost:8000/user-service/api/user/select-by-id?id=1`：
+- cli: `localhost:8000/user-server/api/user/select-by-id?id=1`：
     - 浏览器F12可观察到过滤器对响应相关数据的改动，但来不及观察到请求相关的修改。
 
 **武技：** 开发局部过滤器，读取内置过滤器AddRequestHeader和AddRequestParameter中配置的值：
@@ -632,15 +637,16 @@
     - 标记 `@Component` 以加入spring容器。
     - 名字必须是 `自定义过滤配置的key值 + GatewayFilterFactory` 格式。
     - 必须继承 `o.s.c.g.f.f.AbstractGatewayFilterFactory<外部类.内部配置类>` 类。
-- 在局部过滤器类中开发内部配置类，用于接收和存储主配中的Req值：
-    - `static class Config{}`：埋requestHeader和requestParam两个布尔属性并生成setter/getter。
-- 重写无参构造并使用 `super(Config.class)` 将内部配置类传递给父类。
-- 重写 `shortcutFieldOrder()`：读取主配中Req的属性值并对位赋值给Config配置类的属性：
-    - `return Arrays.asList("requestHeader", "requestParam")`
-- 重写 `apply()`：配置断言逻辑，内部直接使用 `return (exchange, chain) -> {}` 返回过滤结果：
+- 在局部过滤器类中开发静态内部类，该类用于接收和存储主配断言配置中的 `Req` 值：
+    - `static class Config{}`：埋requestHeader和requestParam两个Boolean属性并生成setter/getter。
+- 重写无参构造并使用 `super(Config.class)` 将内部配置类传递给父类进行处理。
+- 重写 `shortcutFieldOrder()`：用于读取主配断言配置中Req的两个值：
+    - `return Arrays.asList("requestHeader", "requestParam")`：对位赋值给Config类的两个属性。
+- 重写 `apply()`：配置过滤器逻辑：
+    - `return (exchange, chain) -> {}`：函数式接口 `GatewayFilter` 可以直接使用lambda表达式返回。
     - `exchange.getRequest().getHeaders().get("a")`：获取指定请求头中的值。
     - `exchange.getRequest().getQueryParams().get("b")`：获取指定请求参数中的值。
-    - `return chain.filter(exchange)`：放行当前过滤器。
+    - `return chain.filter(exchange)`：放行当前请求。
 - 主配添加：
     - `spring.cloud.gateway.routes[0].filters[0].Req=true,true`
 - cli: `localhost:8000/user-service/api/user/select-by-id?id=1`：查看控制台日志。
@@ -648,8 +654,7 @@
 **武技：** 开发全局过滤器，如果请求不携带token，则直接响应401：
 - 开发全局过滤器类 `filter.TokenGlobalFilter`：
     - 标记 `@Component` 以加入spring容器。
-    - 必须实现 `o.s.c.g.f.GlobalFilter` 接口。
-    - 必须实现 `o.s.c.Ordered` 接口。
+    - 必须实现 `o.s.c.g.f.GlobalFilter` 接口和 `o.s.c.Ordered` 接口。
 - 重写 `filter()`：配置过滤器逻辑：
     - `exchange.getRequest().getQueryParams().getFirst("token")`：从请求参数中获取token。
     - `exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)`：设置响应码为401认证失败。
